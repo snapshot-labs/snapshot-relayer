@@ -1622,9 +1622,9 @@ json-stable-stringify-without-jsonify@^1.0.1:
   integrity sha1-nbe1lJatPzz+8wp1FC0tkwrXJlE=
 
 json-to-graphql-query@^2.0.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/json-to-graphql-query/-/json-to-graphql-query-2.1.0.tgz#654685c3c2f19d45050d079c063053847ca17a06"
-  integrity sha512-8BJP4Zx27jII6uyMfWRfnEKIP93GE9C+yolsoRKZ1nOT6HhQjaYcOzVvrqePAWog32+C62nF/N82c89YUEHLMQ==
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/json-to-graphql-query/-/json-to-graphql-query-2.2.0.tgz#7e62fcf4a4d1e16ad1b1972cd3eac0b335c32679"
+  integrity sha512-HiySSlJHm1tiFk95TAJOz1t3Dhp0cvbCnb59L2C5cNq0UhDmsbXt+gdi8enLcMOfhTkI42um1hlbondUazJ64A==
 
 keyv@^3.0.0:
   version "3.1.0"

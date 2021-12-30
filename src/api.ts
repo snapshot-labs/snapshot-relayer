@@ -1,16 +1,31 @@
 import express from 'express';
 import { hashMessage } from '@ethersproject/hash';
 import { getAddress } from '@ethersproject/address';
+import snapshot from '@snapshot-labs/snapshot.js';
 import db from './mysql';
 
 const router = express.Router();
 
+function calculateSafeMessageHash(safe, message, chainId = 1) {
+  const EIP712_SAFE_MESSAGE_TYPE = {
+    SafeMessage: [{ type: 'bytes', name: 'message' }]
+  };
+  return snapshot.utils.getHash({
+    domain: { verifyingContract: safe, chainId },
+    types: EIP712_SAFE_MESSAGE_TYPE,
+    message: { message }
+  });
+}
+
 router.post('/message', async (req, res) => {
   try {
     const msg = JSON.parse(req.body.msg);
+    const hash = hashMessage(req.body.msg);
+    const address = getAddress(req.body.address);
+    const safeHash = calculateSafeMessageHash(address, hash);
     const params = {
-      address: getAddress(req.body.address),
-      hash: hashMessage(req.body.msg),
+      address,
+      hash: safeHash,
       ts: msg.timestamp,
       payload: JSON.stringify(req.body)
     };
