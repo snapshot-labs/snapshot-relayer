@@ -31,7 +31,7 @@ router.post('/message', async (req, res) => {
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log(params);
-    return res.json({ success: true });
+    return res.json({ id: hash });
   } catch (e) {
     return res.status(500).json({
       error: 'unauthorized',
