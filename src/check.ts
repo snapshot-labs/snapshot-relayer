@@ -4,7 +4,7 @@ import db from './mysql';
 
 const subgraphUrl = 'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot';
 const hubUrl = 'https://hub.snapshot.org';
-const delay = 60 * 60 * 4;
+const delay = 60 * 60 * 6;
 const interval = 15e3;
 
 async function send(body) {
