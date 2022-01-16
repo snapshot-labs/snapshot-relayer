@@ -30,7 +30,7 @@ router.post('/message', async (req, res) => {
       payload: JSON.stringify(req.body)
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
-    console.log(params);
+    console.log('Received', params);
     return res.json({ id: hash });
   } catch (e) {
     return res.status(500).json({
