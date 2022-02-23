@@ -41,34 +41,33 @@ async function processSig(address, safeHash) {
 }
 
 async function processSigs() {
-  try {
-    console.log('Process sigs');
-    const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-    const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', ts);
-    console.log('Standby', messages.length);
-    if (messages.length > 0) {
-      const safeHashes = messages.map(message => message.hash);
-      const query = {
-        sigs: {
-          __args: {
-            first: 1000,
-            where: {
-              msgHash_in: safeHashes
-            }
-          },
-          account: true,
-          msgHash: true
-        }
-      };
+  console.log('Process sigs');
+  const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
+  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', ts);
+  console.log('Standby', messages.length);
+  if (messages.length > 0) {
+    const safeHashes = messages.map(message => message.hash);
+    const query = {
+      sigs: {
+        __args: {
+          first: 1000,
+          where: {
+            msgHash_in: safeHashes
+          }
+        },
+        account: true,
+        msgHash: true
+      }
+    };
+    try {
       const results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
       results.sigs.forEach(sig => processSig(sig.account, sig.msgHash));
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error)
-  } finally {
-    await snapshot.utils.sleep(interval);
-    await processSigs();
   }
+  await snapshot.utils.sleep(interval);
+  await processSigs();
 }
 
 setTimeout(async () => await processSigs(), interval);
