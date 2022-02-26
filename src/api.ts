@@ -2,25 +2,18 @@ import express from 'express';
 import { hashMessage } from '@ethersproject/hash';
 import { getAddress } from '@ethersproject/address';
 import snapshot from '@snapshot-labs/snapshot.js';
-import fetch from 'node-fetch';
+import semver from 'semver';
+import { getSafeVersion } from './utils';
 import db from './mysql';
 
 const router = express.Router();
 
 async function calculateSafeMessageHash(safe, message, chainId = 1) {
-  const domain: { verifyingContract: string; chainId?: number } = { verifyingContract: safe };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let safeResponse: any = null;
-  try {
-    safeResponse = await fetch(`https://safe-transaction.mainnet.gnosis.io/api/v1/safes/${safe}`).then(res =>
-      res.json()
-    );
-  } catch (e) {
-    console.log(e);
-    domain.chainId = chainId;
-  }
-  if (safeResponse?.version !== '1.1.1') {
-    domain.chainId = chainId;
+  const domain: { verifyingContract: string; chainId?: number } = { verifyingContract: safe, chainId };
+  // If safe version is less than 1.3.0, then chainId is not required
+  const safeVersion = await getSafeVersion(safe);
+  if (semver.lt(safeVersion, '1.3.0')) {
+    delete domain.chainId;
   }
   const EIP712_SAFE_MESSAGE_TYPE = {
     SafeMessage: [{ type: 'bytes', name: 'message' }]
