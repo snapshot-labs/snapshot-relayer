@@ -1,7 +1,6 @@
 import { Contract } from '@ethersproject/contracts';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { hexValue } from '@ethersproject/bytes';
-import fetch from 'node-fetch';
 
 export async function getSafeVersion(safe) {
   const provider = new StaticJsonRpcProvider('https://rpc.ankr.com/eth');
