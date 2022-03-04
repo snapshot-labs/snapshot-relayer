@@ -59,12 +59,17 @@ async function processSigs() {
         msgHash: true
       }
     };
+    
+    interface Results {
+      sigs?: [{ account: string; msgHash: string }];
+    }
+    let results: Results = {};
     try {
-      const results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
-      results.sigs.forEach(sig => processSig(sig.account, sig.msgHash));
+      results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
     } catch (e) {
       console.log('Subgraph request failed', e);
     }
+    results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash));
   }
   await snapshot.utils.sleep(interval);
   await processSigs();
