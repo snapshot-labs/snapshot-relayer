@@ -3,6 +3,7 @@ import { hashMessage } from '@ethersproject/hash';
 import { getAddress } from '@ethersproject/address';
 import snapshot from '@snapshot-labs/snapshot.js';
 import db from './mysql';
+import pkg from '../package.json';
 
 const router = express.Router();
 
@@ -16,6 +17,13 @@ function calculateSafeMessageHash(safe, message, chainId = 1) {
     message: { message }
   });
 }
+
+router.get('/', async (req, res) => {
+  return res.json({
+    name: pkg.name,
+    version: pkg.version
+  });
+});
 
 router.post('/message', async (req, res) => {
   try {
