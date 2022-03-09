@@ -7,6 +7,10 @@ const hubUrl = 'https://hub.snapshot.org';
 const delay = 60 * 60 * 24 * 2;
 const interval = 15e3;
 
+interface SubgraphResults {
+  sigs?: [{ account: string; msgHash: string }];
+}
+
 async function send(body) {
   const url = `${hubUrl}/api/message`;
   const init = {
@@ -59,8 +63,14 @@ async function processSigs() {
         msgHash: true
       }
     };
-    const results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
-    results.sigs.forEach(sig => processSig(sig.account, sig.msgHash));
+    
+    let results: SubgraphResults = {};
+    try {
+      results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
+    } catch (e) {
+      console.log('Subgraph request failed', e);
+    }
+    results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash));
   }
   await snapshot.utils.sleep(interval);
   await processSigs();
