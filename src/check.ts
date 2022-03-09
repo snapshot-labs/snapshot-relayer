@@ -7,6 +7,10 @@ const hubUrl = 'https://hub.snapshot.org';
 const delay = 60 * 60 * 24 * 2;
 const interval = 15e3;
 
+interface SubgraphResults {
+  sigs?: [{ account: string; msgHash: string }];
+}
+
 async function send(body) {
   const url = `${hubUrl}/api/message`;
   const init = {
@@ -60,10 +64,7 @@ async function processSigs() {
       }
     };
     
-    interface Results {
-      sigs?: [{ account: string; msgHash: string }];
-    }
-    let results: Results = {};
+    let results: SubgraphResults = {};
     try {
       results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
     } catch (e) {
