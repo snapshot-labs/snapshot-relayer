@@ -7,6 +7,8 @@ const hubUrl = 'https://hub.snapshot.org';
 const delay = 60 * 60 * 24 * 2;
 const interval = 15e3;
 
+export let processSigsStatus: boolean | string = true;
+
 interface SubgraphResults {
   sigs?: [{ account: string; msgHash: string }];
 }
@@ -32,10 +34,10 @@ async function send(body) {
 }
 
 async function processSig(address, safeHash) {
-  const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? LIMIT 1';
-  const [message] = await db.queryAsync(query, [address, safeHash]);
-  console.log('Process sig', address, safeHash);
   try {
+    const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? LIMIT 1';
+    const [message] = await db.queryAsync(query, [address, safeHash]);
+    console.log('Process sig', address, safeHash);
     const result = await send(message.payload);
     await db.queryAsync('DELETE FROM messages WHERE address = ? AND hash = ? LIMIT 1', [address, safeHash]);
     console.log('Sent message for', address, safeHash, result);
@@ -47,7 +49,15 @@ async function processSig(address, safeHash) {
 async function processSigs() {
   console.log('Process sigs');
   const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', ts);
+  let messages: Array<{hash: string}>= []; 
+  try {
+    messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', ts);
+  } catch (error) {
+    console.log(error);
+    processSigsStatus = 'Database error';
+    return;
+  }
+  processSigsStatus = true;
   console.log('Standby', messages.length);
   if (messages.length > 0) {
     const safeHashes = messages.map(message => message.hash);
@@ -72,8 +82,14 @@ async function processSigs() {
     }
     results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash));
   }
-  await snapshot.utils.sleep(interval);
-  await processSigs();
+  return;
 }
 
-setTimeout(async () => await processSigs(), interval);
+async function startProcess() {
+  await processSigs();
+  await snapshot.utils.sleep(interval);
+  startProcess();
+  return;
+}
+
+setTimeout(async () => startProcess(), interval);
