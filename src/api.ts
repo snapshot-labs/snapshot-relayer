@@ -5,6 +5,7 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import semver from 'semver';
 import { getSafeVersion } from './utils';
 import db from './mysql';
+import { processSigsStatus } from './check';
 import pkg from '../package.json';
 
 const router = express.Router();
@@ -29,7 +30,8 @@ async function calculateSafeMessageHash(safe, message, chainId = 1) {
 router.get('/', async (req, res) => {
   return res.json({
     name: pkg.name,
-    version: pkg.version
+    version: pkg.version,
+    processSigsStatus
   });
 });
 
