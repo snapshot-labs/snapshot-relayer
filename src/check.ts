@@ -1,8 +1,8 @@
 import snapshot from '@snapshot-labs/snapshot.js';
 import fetch from 'node-fetch';
 import db from './mysql';
+import subgraphs from './subgraphs.json';
 
-const subgraphUrl = 'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot';
 const hubUrl = 'https://hub.snapshot.org';
 const delay = 60 * 60 * 24 * 2;
 const interval = 15e3;
@@ -63,10 +63,10 @@ async function processSigs() {
         msgHash: true
       }
     };
-    
+
     let results: SubgraphResults = {};
     try {
-      results = await snapshot.utils.subgraphRequest(subgraphUrl, query);
+      results = await snapshot.utils.subgraphRequest(subgraphs['1'], query);
     } catch (e) {
       console.log('Subgraph request failed', e);
     }
