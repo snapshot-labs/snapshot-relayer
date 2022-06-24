@@ -13,9 +13,7 @@ async function calculateSafeMessageHash(safe, message, chainId = 1) {
   const domain: { verifyingContract: string; chainId?: number } = { verifyingContract: safe, chainId };
   // If safe version is less than 1.3.0, then chainId is not required
   const safeVersion = await getSafeVersion(safe);
-  if (semver.lt(safeVersion, '1.3.0')) {
-    delete domain.chainId;
-  }
+  if (semver.lt(safeVersion, '1.3.0')) delete domain.chainId;
   const EIP712_SAFE_MESSAGE_TYPE = {
     SafeMessage: [{ type: 'bytes', name: 'message' }]
   };
