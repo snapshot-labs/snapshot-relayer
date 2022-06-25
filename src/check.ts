@@ -40,7 +40,7 @@ async function processSig(address, safeHash) {
     await db.queryAsync('DELETE FROM messages WHERE address = ? AND hash = ? LIMIT 1', [address, safeHash]);
     console.log('Sent message for', address, safeHash, result);
   } catch (e) {
-    console.log('Failed', address, safeHash, e);
+    console.log('Failed', address, safeHash, e, e?.message);
   }
 }
 
