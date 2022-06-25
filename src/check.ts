@@ -37,7 +37,10 @@ async function processSig(address, safeHash, network) {
   console.log('Process sig', address, safeHash);
   try {
     const result = await send(message.payload);
-    await db.queryAsync('DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1', [address, safeHash, network]);
+    await db.queryAsync(
+      'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
+      [address, safeHash, network]
+    );
     console.log('Sent message for', address, safeHash, result);
   } catch (e) {
     console.log('Failed', address, safeHash, e);
@@ -47,7 +50,10 @@ async function processSig(address, safeHash, network) {
 async function processSigs(network = '1') {
   console.log('Process sigs');
   const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ? AND network = ?', [ts, network]);
+  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ? AND network = ?', [
+    ts,
+    network
+  ]);
   console.log('Standby', messages.length);
   if (messages.length > 0) {
     const safeHashes = messages.map(message => message.hash);

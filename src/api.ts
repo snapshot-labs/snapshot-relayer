@@ -22,7 +22,8 @@ async function getSpaceNetwork(space, env = 'livenet') {
   return network;
 }
 
-async function calculateSafeMessageHash(safe, message, chainId = 1) {
+async function calculateSafeMessageHash(safe, message, network = '1') {
+  const chainId = parseInt(network);
   const domain: { verifyingContract: string; chainId?: number } = {
     verifyingContract: safe,
     chainId
@@ -52,9 +53,9 @@ router.post('/message', async (req, res) => {
     const msg = JSON.parse(req.body.msg);
     const hash = hashMessage(req.body.msg);
     const address = getAddress(req.body.address);
-    const safeHash = await calculateSafeMessageHash(address, hash);
     const env = 'livenet';
     const network = await getSpaceNetwork(msg.space, env);
+    const safeHash = await calculateSafeMessageHash(address, hash, network);
     const params = {
       address,
       hash: safeHash,
