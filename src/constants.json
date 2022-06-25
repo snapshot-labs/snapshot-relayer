@@ -1,0 +1,10 @@
+{
+  "livenet": {
+    "ingestor": "https://hub.snapshot.org/api/message",
+    "api": "https://hub.snapshot.org/graphql"
+  },
+  "testnet": {
+    "ingestor": "https://testnet.snapshot.org/api/message",
+    "api": "https://testnet.snapshot.org/graphql"
+  }
+}
