@@ -34,27 +34,27 @@ async function send(body, env = 'livenet') {
 async function processSig(address, safeHash, network) {
   const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1';
   const [message] = await db.queryAsync(query, [address, safeHash, network]);
-  console.log('Process sig', address, safeHash);
+  console.log('Process sig', network, address, safeHash);
   try {
     const result = await send(message.payload);
     await db.queryAsync(
       'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
       [address, safeHash, network]
     );
-    console.log('Sent message for', address, safeHash, result);
+    console.log('Sent message for', network, address, safeHash, result);
   } catch (e) {
-    console.log('Failed', address, safeHash, e);
+    console.log('Failed', network, address, safeHash, e);
   }
 }
 
 async function processSigs(network = '1') {
-  console.log('Process sigs');
+  console.log('Process sigs', network);
   const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
   const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ? AND network = ?', [
     ts,
     network
   ]);
-  console.log('Standby', messages.length);
+  console.log('Standby', network, messages.length);
   if (messages.length > 0) {
     const safeHashes = messages.map(message => message.hash);
     const query = {
@@ -74,7 +74,7 @@ async function processSigs(network = '1') {
     try {
       results = await snapshot.utils.subgraphRequest(subgraphs[network], query);
     } catch (e) {
-      console.log('Subgraph request failed', e);
+      console.log('Subgraph request failed', network, e);
     }
     results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash, network));
   }
@@ -82,4 +82,7 @@ async function processSigs(network = '1') {
   await processSigs(network);
 }
 
-setTimeout(() => processSigs('1'), interval);
+setTimeout(() => {
+  processSigs('1');
+  processSigs('10');
+}, interval);
