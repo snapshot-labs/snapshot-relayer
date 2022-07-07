@@ -2,8 +2,8 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import fetch from 'node-fetch';
 import db from './mysql';
 import subgraphs from './subgraphs.json';
+import constants from './constants.json';
 
-const hubUrl = 'https://hub.snapshot.org';
 const delay = 60 * 60 * 24 * 2;
 const interval = 15e3;
 
@@ -11,8 +11,8 @@ interface SubgraphResults {
   sigs?: [{ account: string; msgHash: string }];
 }
 
-async function send(body) {
-  const url = `${hubUrl}/api/message`;
+async function send(body, env = 'livenet') {
+  const url = constants[env].ingestor;
   const init = {
     method: 'POST',
     headers: {
@@ -31,24 +31,30 @@ async function send(body) {
   });
 }
 
-async function processSig(address, safeHash) {
-  const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? LIMIT 1';
-  const [message] = await db.queryAsync(query, [address, safeHash]);
-  console.log('Process sig', address, safeHash);
+async function processSig(address, safeHash, network) {
+  const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1';
+  const [message] = await db.queryAsync(query, [address, safeHash, network]);
+  console.log('Process sig', network, address, safeHash);
   try {
     const result = await send(message.payload);
-    await db.queryAsync('DELETE FROM messages WHERE address = ? AND hash = ? LIMIT 1', [address, safeHash]);
-    console.log('Sent message for', address, safeHash, result);
+    await db.queryAsync(
+      'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
+      [address, safeHash, network]
+    );
+    console.log('Sent message for', network, address, safeHash, result);
   } catch (e) {
-    console.log('Failed', address, safeHash, e, e?.message);
+    console.log('Failed', network, address, safeHash, e, e?.message);
   }
 }
 
-async function processSigs() {
-  console.log('Process sigs');
+async function processSigs(network = '1') {
+  console.log('Process sigs', network);
   const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', ts);
-  console.log('Standby', messages.length);
+  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ? AND network = ?', [
+    ts,
+    network
+  ]);
+  console.log('Standby', network, messages.length);
   if (messages.length > 0) {
     const safeHashes = messages.map(message => message.hash);
     const query = {
@@ -66,14 +72,17 @@ async function processSigs() {
 
     let results: SubgraphResults = {};
     try {
-      results = await snapshot.utils.subgraphRequest(subgraphs['1'], query);
+      results = await snapshot.utils.subgraphRequest(subgraphs[network], query);
     } catch (e) {
-      console.log('Subgraph request failed', e);
+      console.log('Subgraph request failed', network, e);
     }
-    results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash));
+    results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash, network));
   }
   await snapshot.utils.sleep(interval);
-  await processSigs();
+  await processSigs(network);
 }
 
-setTimeout(async () => await processSigs(), interval);
+setTimeout(() => {
+  processSigs('1');
+  processSigs('10');
+}, interval);

@@ -5,12 +5,29 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import semver from 'semver';
 import { getSafeVersion } from './utils';
 import db from './mysql';
+import constants from './constants.json';
 import pkg from '../package.json';
 
 const router = express.Router();
 
-async function calculateSafeMessageHash(safe, message, chainId = 1) {
-  const domain: { verifyingContract: string; chainId?: number } = { verifyingContract: safe, chainId };
+async function getSpaceNetwork(space, env = 'livenet') {
+  const {
+    space: { network }
+  } = await snapshot.utils.subgraphRequest(constants[env].api, {
+    space: {
+      __args: { id: space },
+      network: true
+    }
+  });
+  return network;
+}
+
+async function calculateSafeMessageHash(safe, message, network = '1') {
+  const chainId = parseInt(network);
+  const domain: { verifyingContract: string; chainId?: number } = {
+    verifyingContract: safe,
+    chainId
+  };
   // If safe version is less than 1.3.0, then chainId is not required
   const safeVersion = await getSafeVersion(safe);
   if (semver.lt(safeVersion, '1.3.0')) delete domain.chainId;
@@ -36,12 +53,16 @@ router.post('/message', async (req, res) => {
     const msg = JSON.parse(req.body.msg);
     const hash = hashMessage(req.body.msg);
     const address = getAddress(req.body.address);
-    const safeHash = await calculateSafeMessageHash(address, hash);
+    const env = 'livenet';
+    const network = await getSpaceNetwork(msg.space, env);
+    const safeHash = await calculateSafeMessageHash(address, hash, network);
     const params = {
       address,
       hash: safeHash,
       ts: msg.timestamp,
-      payload: JSON.stringify(req.body)
+      payload: JSON.stringify(req.body),
+      network,
+      env
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
