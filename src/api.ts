@@ -54,7 +54,8 @@ router.post('/message', async (req, res) => {
     const hash = hashMessage(req.body.msg);
     const address = getAddress(req.body.address);
     const env = 'livenet';
-    const network = await getSpaceNetwork(msg.space, env);
+    let network = env === 'livenet' ? '1' : '4';
+    if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
     const safeHash = await calculateSafeMessageHash(address, hash, network);
     const params = {
       address,
