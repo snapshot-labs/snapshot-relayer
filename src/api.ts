@@ -48,6 +48,19 @@ router.get('/', async (req, res) => {
   });
 });
 
+router.get('/messages/:address', async (req, res) => {
+  try {
+    const address = getAddress(req.params.address);
+    const results = await db.queryAsync('SELECT * FROM messages WHERE address = ?', [address]);
+    return res.json(results);
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      error: 'unauthorized'
+    });
+  }
+});
+
 router.post('/message', async (req, res) => {
   try {
     const msg = JSON.parse(req.body.msg);
