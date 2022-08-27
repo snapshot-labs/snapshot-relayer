@@ -21,14 +21,8 @@ async function send(body, env = 'livenet') {
     },
     body
   };
-  return new Promise((resolve, reject) => {
-    fetch(url, init)
-      .then(res => {
-        if (res.ok) return resolve(res.json());
-        throw res;
-      })
-      .catch(e => e.json().then(json => reject(json)));
-  });
+  const res = await fetch(url, init);
+  return res.json();
 }
 
 async function processSig(address, safeHash, network) {
