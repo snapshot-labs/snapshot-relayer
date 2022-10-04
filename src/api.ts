@@ -56,7 +56,7 @@ router.get('/messages/:address', async (req, res) => {
   } catch (e) {
     console.log(e);
     return res.status(500).json({
-      error: 'unauthorized'
+      error: 'oops, something went wrong'
     });
   }
 });
