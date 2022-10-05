@@ -48,10 +48,10 @@ router.get('/', async (req, res) => {
   });
 });
 
-router.get('/messages/:address', async (req, res) => {
+router.get('/messages/:hash', async (req, res) => {
   try {
-    const address = getAddress(req.params.address);
-    const results = await db.queryAsync('SELECT * FROM messages WHERE address = ?', [address]);
+    const { hash } = req.params;
+    const results = await db.queryAsync('SELECT * FROM messages WHERE msg_hash = ?', [hash]);
     return res.json(results);
   } catch (e) {
     console.log(e);
@@ -73,11 +73,11 @@ router.post('/message', async (req, res) => {
     const params = {
       address,
       hash: safeHash,
+      msg_hash: hash,
       ts: msg.timestamp,
       payload: JSON.stringify(req.body),
       network,
-      env,
-      msg_hash: hash
+      env
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
