@@ -7,5 +7,6 @@ CREATE TABLE messages (
   network VARCHAR(24) NOT NULL,
   env VARCHAR(24) NOT NULL,
   PRIMARY KEY (address, hash),
-  INDEX ts (ts)
+  INDEX ts (ts),
+  INDEX msg_hash (msg_hash)
 );
