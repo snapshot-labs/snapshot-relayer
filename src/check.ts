@@ -80,4 +80,5 @@ async function processSigs(network = '1') {
 setTimeout(() => {
   processSigs('1');
   processSigs('10');
+  processSigs('137');
 }, interval);
