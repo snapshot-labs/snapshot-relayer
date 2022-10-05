@@ -76,7 +76,8 @@ router.post('/message', async (req, res) => {
       ts: msg.timestamp,
       payload: JSON.stringify(req.body),
       network,
-      env
+      env,
+      msg_hash: hash
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
