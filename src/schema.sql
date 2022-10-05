@@ -6,6 +6,6 @@ CREATE TABLE messages (
   payload JSON NOT NULL,
   network VARCHAR(24) NOT NULL,
   env VARCHAR(24) NOT NULL,
-  PRIMARY KEY (address, hash, msg_hash),
+  PRIMARY KEY (address, hash),
   INDEX ts (ts)
 );
