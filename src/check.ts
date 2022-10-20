@@ -4,7 +4,7 @@ import db from './mysql';
 import subgraphs from './subgraphs.json';
 import constants from './constants.json';
 
-const delay = 60 * 60 * 24 * 2;
+const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
 
 interface SubgraphResults {
