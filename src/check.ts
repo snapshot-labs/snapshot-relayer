@@ -38,7 +38,7 @@ async function processSig(address, safeHash, network) {
     console.log('Sent message for', network, address, safeHash, result);
   } catch (e) {
     // @ts-ignore
-    console.log('Failed', network, address, safeHash, e, e?.message);
+    console.log('[processSig] Failed', network, address, safeHash, e, e?.message);
   }
 }
 
