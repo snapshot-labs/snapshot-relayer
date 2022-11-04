@@ -64,7 +64,7 @@ router.get('/messages/:hash', async (req, res) => {
 router.post('/msg', async (req, res) => {
   try {
     const msg = req.body.data.message;
-    const msg_hash = await snapshot.utils.getHash(req.body.data);
+    const msg_hash = snapshot.utils.getHash(req.body.data);
     const address = getAddress(req.body.address);
     const env = 'livenet';
     let network = env === 'livenet' ? '1' : '4';
@@ -81,7 +81,7 @@ router.post('/msg', async (req, res) => {
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
-    return res.json({ id: hash });
+    return res.json({ id: msg_hash });
   } catch (e) {
     console.log(e);
     return res.status(500).json({
@@ -111,7 +111,7 @@ router.post('/message', async (req, res) => {
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
-    return res.json({ id: hash });
+    return res.json({ id: msg_hash });
   } catch (e) {
     console.log(e);
     return res.status(500).json({
