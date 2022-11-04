@@ -61,19 +61,49 @@ router.get('/messages/:hash', async (req, res) => {
   }
 });
 
-router.post('/message', async (req, res) => {
+router.post('/msg', async (req, res) => {
   try {
-    const msg = JSON.parse(req.body.msg);
-    const hash = hashMessage(req.body.msg);
+    const msg = req.body.data.message;
+    const msg_hash = await snapshot.utils.getHash(req.body.data);
     const address = getAddress(req.body.address);
     const env = 'livenet';
     let network = env === 'livenet' ? '1' : '4';
     if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
-    const safeHash = await calculateSafeMessageHash(address, hash, network);
+    const hash = await calculateSafeMessageHash(address, msg_hash, network);
     const params = {
       address,
-      hash: safeHash,
-      msg_hash: hash,
+      hash,
+      msg_hash,
+      ts: msg.timestamp,
+      payload: JSON.stringify(req.body),
+      network,
+      env
+    };
+    await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
+    console.log('Received', params);
+    return res.json({ id: hash });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      error: 'unauthorized',
+      error_description: e
+    });
+  }
+});
+
+router.post('/message', async (req, res) => {
+  try {
+    const msg = JSON.parse(req.body.msg);
+    const msg_hash = hashMessage(req.body.msg);
+    const address = getAddress(req.body.address);
+    const env = 'livenet';
+    let network = env === 'livenet' ? '1' : '4';
+    if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
+    const hash = await calculateSafeMessageHash(address, msg_hash, network);
+    const params = {
+      address,
+      hash,
+      msg_hash,
       ts: msg.timestamp,
       payload: JSON.stringify(req.body),
       network,
