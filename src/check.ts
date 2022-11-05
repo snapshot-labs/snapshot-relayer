@@ -70,7 +70,7 @@ async function processSigs(network = '1') {
     try {
       results = await snapshot.utils.subgraphRequest(subgraphs[network], query);
     } catch (e) {
-      console.log('Subgraph request failed', network, e);
+      console.log('Subgraph request failed:', network, e);
     }
     results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash, network));
   }
