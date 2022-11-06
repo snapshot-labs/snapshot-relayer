@@ -1,6 +1,7 @@
 {
   "livenet": {
     "ingestor": "https://hub.snapshot.org/api/message",
+    "ingestorEIP712": "https://hub.snapshot.org/api/msg",
     "api": "https://hub.snapshot.org/graphql"
   },
   "testnet": {

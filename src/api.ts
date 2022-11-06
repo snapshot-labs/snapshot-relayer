@@ -61,19 +61,19 @@ router.get('/messages/:hash', async (req, res) => {
   }
 });
 
-router.post('/message', async (req, res) => {
+router.post('/msg', async (req, res) => {
   try {
-    const msg = JSON.parse(req.body.msg);
-    const hash = hashMessage(req.body.msg);
+    const msg = req.body.data.message;
+    const msgHash = snapshot.utils.getHash(req.body.data);
     const address = getAddress(req.body.address);
     const env = 'livenet';
     let network = env === 'livenet' ? '1' : '4';
     if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
-    const safeHash = await calculateSafeMessageHash(address, hash, network);
+    const hash = await calculateSafeMessageHash(address, msgHash, network);
     const params = {
       address,
-      hash: safeHash,
-      msg_hash: hash,
+      hash,
+      msg_hash: msgHash,
       ts: msg.timestamp,
       payload: JSON.stringify(req.body),
       network,
@@ -81,9 +81,39 @@ router.post('/message', async (req, res) => {
     };
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
-    return res.json({ id: hash });
+    return res.json({ id: msgHash });
   } catch (e) {
-    console.log(e);
+    console.log('[EIP721] Unknown error:', e);
+    return res.status(500).json({
+      error: 'unauthorized',
+      error_description: e
+    });
+  }
+});
+
+router.post('/message', async (req, res) => {
+  try {
+    const msg = JSON.parse(req.body.msg);
+    const msgHash = hashMessage(req.body.msg);
+    const address = getAddress(req.body.address);
+    const env = 'livenet';
+    let network = env === 'livenet' ? '1' : '4';
+    if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
+    const hash = await calculateSafeMessageHash(address, msgHash, network);
+    const params = {
+      address,
+      hash,
+      msg_hash: msgHash,
+      ts: msg.timestamp,
+      payload: JSON.stringify(req.body),
+      network,
+      env
+    };
+    await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
+    console.log('Received', params);
+    return res.json({ id: msgHash });
+  } catch (e) {
+    console.log('[Personal Sign] Unknown error:', e);
     return res.status(500).json({
       error: 'unauthorized',
       error_description: e
