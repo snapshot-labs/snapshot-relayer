@@ -1,5 +1,4 @@
 import express from 'express';
-import { hashMessage } from '@ethersproject/hash';
 import { getAddress } from '@ethersproject/address';
 import snapshot from '@snapshot-labs/snapshot.js';
 import semver from 'semver';
@@ -94,33 +93,10 @@ router.post('/msg', async (req, res) => {
 });
 
 router.post('/message', async (req, res) => {
-  try {
-    const msg = JSON.parse(req.body.msg);
-    const msgHash = hashMessage(req.body.msg);
-    const address = getAddress(req.body.address);
-    const env = 'livenet';
-    let network = env === 'livenet' ? '1' : '4';
-    if (msg.type !== 'settings') network = await getSpaceNetwork(msg.space, env);
-    const hash = await calculateSafeMessageHash(address, msgHash, network);
-    const params = {
-      address,
-      hash,
-      msg_hash: msgHash,
-      ts: msg.timestamp,
-      payload: JSON.stringify(req.body),
-      network,
-      env
-    };
-    await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
-    console.log('Received', params);
-    return res.json({ id: msgHash });
-  } catch (e) {
-    console.log('[Personal Sign] Unknown error:', e);
-    return res.status(500).json({
-      error: 'unauthorized',
-      error_description: e
-    });
-  }
+  return res.status(500).json({
+    error: 'unauthorized',
+    error_description: 'personal sign is not supported anymore, move to EIP712'
+  });
 });
 
 export default router;

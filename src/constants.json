@@ -1,11 +1,10 @@
 {
   "livenet": {
-    "ingestor": "https://hub.snapshot.org/api/message",
-    "ingestorEIP712": "https://hub.snapshot.org/api/msg",
+    "ingestor": "https://hub.snapshot.org/api/msg",
     "api": "https://hub.snapshot.org/graphql"
   },
   "testnet": {
-    "ingestor": "https://testnet.snapshot.org/api/message",
+    "ingestor": "https://testnet.snapshot.org/api/msg",
     "api": "https://testnet.snapshot.org/graphql"
   }
 }
