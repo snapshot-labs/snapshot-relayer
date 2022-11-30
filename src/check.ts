@@ -12,8 +12,7 @@ interface SubgraphResults {
 }
 
 async function send(body, env = 'livenet') {
-  let url = constants[env].ingestor;
-  if (JSON.parse(body).data?.types) url = constants[env].ingestorEIP712;
+  const url = constants[env].ingestor;
   const init = {
     method: 'POST',
     headers: {
