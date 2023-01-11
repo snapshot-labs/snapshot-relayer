@@ -48,20 +48,24 @@ async function processSigs(network = '1') {
   if (messages.length > 0) {
     const provider = snapshot.utils.getProvider(network);
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
-    const response = await snapshot.utils.multicall(
-      network,
-      provider,
-      abi,
-      messages.map(message => [message.address, 'signedMessages', [message.hash]]),
-      {
-        blockTag: 'latest'
-      }
-    );
-
-    response?.forEach(
-      (res, index) =>
-        res.toString() === '1' && processSig(messages[index].address, messages[index].hash, network)
-    );
+    try {
+      const response = await snapshot.utils.multicall(
+        network,
+        provider,
+        abi,
+        messages.map(message => [message.address, 'signedMessages', [message.hash]]),
+        {
+          blockTag: 'latest'
+        }
+      );
+      response?.forEach(
+        (res, index) =>
+          res.toString() === '1' &&
+          processSig(messages[index].address, messages[index].hash, network)
+      );
+    } catch (error) {
+      console.log('multicall error', error);
+    }
   }
   await snapshot.utils.sleep(interval);
   await processSigs(network);
