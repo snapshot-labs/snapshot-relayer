@@ -1,6 +1,0 @@
-{
-  "1": "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot",
-  "10": "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot-optimism",
-  "42": "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot-kovan",
-  "137": "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot-polygon"
-}

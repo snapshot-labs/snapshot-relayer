@@ -1,15 +1,10 @@
 import snapshot from '@snapshot-labs/snapshot.js';
 import fetch from 'node-fetch';
 import db from './mysql';
-import subgraphs from './subgraphs.json';
 import constants from './constants.json';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
-
-interface SubgraphResults {
-  sigs?: [{ account: string; msgHash: string }];
-}
 
 async function send(body, env = 'livenet') {
   const url = constants[env].ingestor;
@@ -51,27 +46,22 @@ async function processSigs(network = '1') {
   ]);
   console.log('Standby', network, messages.length);
   if (messages.length > 0) {
-    const safeHashes = messages.map(message => message.hash);
-    const query = {
-      sigs: {
-        __args: {
-          first: 1000,
-          where: {
-            msgHash_in: safeHashes
-          }
-        },
-        account: true,
-        msgHash: true
+    const provider = snapshot.utils.getProvider(network);
+    const abi = ['function signedMessages(bytes32) view returns (uint256)'];
+    const response = await snapshot.utils.multicall(
+      network,
+      provider,
+      abi,
+      messages.map(message => [message.address, 'signedMessages', [message.hash]]),
+      {
+        blockTag: 'latest'
       }
-    };
+    );
 
-    let results: SubgraphResults = {};
-    try {
-      results = await snapshot.utils.subgraphRequest(subgraphs[network], query);
-    } catch (e) {
-      console.log('Subgraph request failed:', network, e);
-    }
-    results.sigs?.forEach(sig => processSig(sig.account, sig.msgHash, network));
+    response?.forEach(
+      (res, index) =>
+        res.toString() === '1' && processSig(messages[index].address, messages[index].hash, network)
+    );
   }
   await snapshot.utils.sleep(interval);
   await processSigs(network);
