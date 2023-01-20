@@ -5,7 +5,7 @@ import semver from 'semver';
 import { getSafeVersion } from './utils';
 import db from './mysql';
 import constants from './constants.json';
-import pkg from '../package.json';
+import { name as packageName, version as packageVersion } from '../package.json';
 
 const router = express.Router();
 
@@ -41,9 +41,11 @@ async function calculateSafeMessageHash(safe, message, network = '1') {
 }
 
 router.get('/', async (req, res) => {
+  const commit = process.env.COMMIT_HASH || '';
+  const version = commit ? `${packageVersion}#${commit.substring(0, 7)}` : packageVersion;
   return res.json({
-    name: pkg.name,
-    version: pkg.version
+    name: packageName,
+    version
   });
 });
 
