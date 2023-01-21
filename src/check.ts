@@ -64,7 +64,7 @@ async function processSigs(network = '1') {
           processSig(messages[index].address, messages[index].hash, network)
       );
     } catch (error) {
-      console.log('multicall error', error);
+      console.log(`multicall error for network: ${network}`, error);
     }
   }
   await snapshot.utils.sleep(interval);
