@@ -6,6 +6,8 @@ import constants from './constants.json';
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
 
+const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '137', '42161'];
+
 async function send(body, env = 'livenet') {
   const url = constants[env].ingestor;
   const init = {
@@ -37,14 +39,7 @@ async function processSig(address, safeHash, network) {
   }
 }
 
-async function processSigs(network = '1') {
-  console.log('Process sigs', network);
-  const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  const messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ? AND network = ?', [
-    ts,
-    network
-  ]);
-  console.log('Standby', network, messages.length);
+async function checkSignedMessages(messages, network) {
   if (messages.length > 0) {
     const provider = snapshot.utils.getProvider(network);
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
@@ -58,6 +53,11 @@ async function processSigs(network = '1') {
           blockTag: 'latest'
         }
       );
+      console.log(
+        `Network: ${network} - Valid: ${
+          response.filter(r => r.toString() === '1').length
+        } - Invalid: ${response.filter(r => r.toString() === '0').length}`
+      );
       response?.forEach(
         (res, index) =>
           res.toString() === '1' &&
@@ -67,13 +67,38 @@ async function processSigs(network = '1') {
       console.log(`multicall error for network: ${network}`, error);
     }
   }
-  await snapshot.utils.sleep(interval);
-  await processSigs(network);
 }
 
-setTimeout(() => {
-  processSigs('1');
-  processSigs('10');
-  processSigs('137');
-  processSigs('42161');
-}, interval);
+async function processSigs() {
+  console.log('Process all sigs');
+
+  // Get all messages from last 3 days and filter by supported networks
+  const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
+  let messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', [ts]);
+  messages = messages.filter(message => SUPPORTED_NETWORKS.includes(message.network));
+  console.log('Total messages waiting: ', messages.length);
+
+  // Divide messages by network
+  const messagesByNetwork = messages.reduce((acc, message) => {
+    if (!acc[message.network]) acc[message.network] = [];
+    acc[message.network].push(message);
+    return acc;
+  }, {});
+  Object.keys(messagesByNetwork).forEach(m =>
+    console.log(`Network: ${m} - Standby: ${messagesByNetwork[m].length};`)
+  );
+
+  // Process messages by network
+  await Promise.all(
+    Object.keys(messagesByNetwork).map(network =>
+      checkSignedMessages(messagesByNetwork[network], network)
+    )
+  );
+  console.log('Done');
+
+  // Wait and process again
+  await snapshot.utils.sleep(interval);
+  processSigs();
+}
+
+processSigs();

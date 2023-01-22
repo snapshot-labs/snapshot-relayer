@@ -68,7 +68,7 @@ router.post('/msg', async (req, res) => {
     const msgHash = snapshot.utils.getHash(req.body.data);
     const address = getAddress(req.body.address);
     const env = 'livenet';
-    let network = env === 'livenet' ? '1' : '4';
+    let network = env === 'livenet' ? '1' : '5';
     if (!req.body.data.types.Space && !msg.settings)
       network = await getSpaceNetwork(msg.space, env);
 
