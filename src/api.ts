@@ -40,7 +40,7 @@ async function calculateSafeMessageHash(safe, message, network = '1') {
   });
 }
 
-router.get('/', async (req, res) => {
+router.get('/api', async (req, res) => {
   const commit = process.env.COMMIT_HASH || '';
   const version = commit ? `${packageVersion}#${commit.substring(0, 7)}` : packageVersion;
   return res.json({
@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
   });
 });
 
-router.get('/messages/:hash', async (req, res) => {
+router.get('/api/messages/:hash', async (req, res) => {
   try {
     const { hash } = req.params;
     const results = await db.queryAsync('SELECT * FROM messages WHERE msg_hash = ?', [hash]);
@@ -62,7 +62,7 @@ router.get('/messages/:hash', async (req, res) => {
   }
 });
 
-router.post('/msg', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const msg = req.body.data.message;
     const msgHash = snapshot.utils.getHash(req.body.data);
@@ -94,10 +94,10 @@ router.post('/msg', async (req, res) => {
   }
 });
 
-router.post('/message', async (req, res) => {
+router.post('/api/msg', async (req, res) => {
   return res.status(500).json({
     error: 'unauthorized',
-    error_description: 'personal sign is not supported anymore, move to EIP712'
+    error_description: 'this route is deprecated, please use / instead'
   });
 });
 
