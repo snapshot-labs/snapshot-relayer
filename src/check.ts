@@ -8,6 +8,16 @@ const interval = 15e3;
 
 const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '137', '42161'];
 
+const errorMessagesWhitelist = [
+  'signature validation failed',
+  'pinning failed',
+  'failed store settings',
+  'failed to check validation',
+  'failed to check proposals limit',
+  'failed to check vote validation',
+  'failed to check voting power'
+];
+
 async function send(body, env = 'livenet') {
   const url = constants[env].ingestor;
   const init = {
@@ -28,11 +38,15 @@ async function processSig(address, safeHash, network) {
   console.log('Process sig', network, address, safeHash);
   try {
     const result = await send(message.payload);
+    if (result.error_description && errorMessagesWhitelist.includes(result.error_description)) {
+      console.log('[processSig] Received error', network, address, safeHash, result);
+      return;
+    }
     await db.queryAsync(
       'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
       [address, safeHash, network]
     );
-    console.log('Sent message for', network, address, safeHash, result);
+    console.log('[processSig] Sent message for', network, address, safeHash, result);
   } catch (e) {
     // @ts-ignore
     console.log('[processSig] Failed', network, address, safeHash, e, e?.message);
