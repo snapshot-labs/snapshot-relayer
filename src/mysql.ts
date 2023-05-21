@@ -4,8 +4,8 @@ import Connection from 'mysql/lib/Connection';
 import bluebird from 'bluebird';
 import parse from 'connection-string';
 
-// @ts-ignore
-const config = parse(process.env.DATABASE_URL);
+const mysqlUrl = `${process.env.DATABASE_URL}/${process.env.MYSQL_DATABASE_NAME}`;
+const config = parse(mysqlUrl);
 config.connectionLimit = 1;
 config.multipleStatements = true;
 config.database = config.path[0];
