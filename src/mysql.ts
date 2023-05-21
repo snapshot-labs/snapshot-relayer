@@ -5,6 +5,7 @@ import bluebird from 'bluebird';
 import parse from 'connection-string';
 
 const mysqlUrl = `${process.env.DATABASE_URL}/${process.env.MYSQL_DATABASE_NAME}`;
+// @ts-ignore
 const config = parse(mysqlUrl);
 config.connectionLimit = 1;
 config.multipleStatements = true;
