@@ -17,7 +17,7 @@
     "@ethersproject/bytes": "^5.5.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/hash": "^5.5.0",
-    "@snapshot-labs/snapshot.js": "^0.4.82",
+    "@snapshot-labs/snapshot.js": "^0.4.103",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "connection-string": "^1.0.1",
