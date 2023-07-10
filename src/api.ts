@@ -28,8 +28,12 @@ async function calculateSafeMessageHash(safe, message, network = '1') {
     chainId
   };
   // If safe version is less than 1.3.0, then chainId is not required
-  const safeVersion = await getSafeVersion(safe, network);
-  if (semver.lt(safeVersion, '1.3.0')) delete domain.chainId;
+  try{  
+    const safeVersion = await getSafeVersion(safe, network);
+    if (semver.lt(safeVersion, '1.3.0')) delete domain.chainId;
+  }catch(e){
+    console.log('[calculateSafeMessageHash]',e);
+  }
   const EIP712_SAFE_MESSAGE_TYPE = {
     SafeMessage: [{ type: 'bytes', name: 'message' }]
   };
