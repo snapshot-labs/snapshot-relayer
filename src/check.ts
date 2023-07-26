@@ -6,7 +6,7 @@ import constants from './constants.json';
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
 
-const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '137', '42161'];
+const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '100', '137', '42161'];
 
 const errorMessagesWhitelist = [
   'signature validation failed',
