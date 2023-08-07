@@ -4,15 +4,17 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import semver from 'semver';
 import { getSafeVersion } from './utils';
 import db from './mysql';
+// TODO: remove when all environments are updated
 import constants from './constants.json';
 import { name as packageName, version as packageVersion } from '../package.json';
 
 const router = express.Router();
 
 async function getSpaceNetwork(space, env = 'livenet') {
+  const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
   const {
     space: { network }
-  } = await snapshot.utils.subgraphRequest(constants[env].api, {
+  } = await snapshot.utils.subgraphRequest(snapshotHubUrl, {
     space: {
       __args: { id: space },
       network: true
