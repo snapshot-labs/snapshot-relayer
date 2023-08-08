@@ -1,6 +1,7 @@
 import snapshot from '@snapshot-labs/snapshot.js';
 import fetch from 'node-fetch';
 import db from './mysql';
+// TODO: remove when all environments are updated
 import constants from './constants.json';
 
 const delay = 60 * 60 * 24 * 3;
@@ -20,7 +21,7 @@ const errorMessagesWhitelist = [
 ];
 
 async function send(body, env = 'livenet') {
-  const url = constants[env].ingestor;
+  const url = process.env.SEQUENCER_URL || constants[env].ingestor;
   const init = {
     method: 'POST',
     headers: {
