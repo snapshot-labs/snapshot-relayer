@@ -4,9 +4,12 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import api from './api';
 import './check';
+import initMetrics from '../metrics';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+initMetrics(app);
 
 app.use(bodyParser.json({ limit: '4mb' }));
 app.use(bodyParser.urlencoded({ limit: '4mb', extended: false }));
