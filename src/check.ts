@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import db from './mysql';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
+import { timeMessageProcess } from './metrics';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
@@ -57,6 +58,7 @@ async function processSig(address, safeHash, network) {
 
 async function checkSignedMessages(messages, network) {
   if (messages.length > 0) {
+    const end = timeMessageProcess.startTimer({ network });
     const provider = snapshot.utils.getProvider(network);
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
     try {
@@ -81,6 +83,8 @@ async function checkSignedMessages(messages, network) {
       );
     } catch (error) {
       console.log(`multicall error for network: ${network}`, error);
+    } finally {
+      end();
     }
   }
 }
