@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 initMetrics(app);
 
+app.disable('x-powered-by');
 app.use(bodyParser.json({ limit: '4mb' }));
 app.use(bodyParser.urlencoded({ limit: '4mb', extended: false }));
 app.use(cors({ maxAge: 86400 }));
