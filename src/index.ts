@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import api from './api';
 import './check';
-import initMetrics from '../metrics';
+import initMetrics from './metrics';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
