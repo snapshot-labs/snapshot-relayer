@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import db from './mysql';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
+import { capture } from '@snapshot-labs/snapshot-sentry';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
@@ -50,6 +51,7 @@ async function processSig(address, safeHash, network) {
     );
     console.log('[processSig] Sent message for', network, address, safeHash, result);
   } catch (e) {
+    capture(e);
     // @ts-ignore
     console.log('[processSig] Failed', network, address, safeHash, e, e?.message);
   }
@@ -79,8 +81,9 @@ async function checkSignedMessages(messages, network) {
           res.toString() === '1' &&
           processSig(messages[index].address, messages[index].hash, network)
       );
-    } catch (error) {
-      console.log(`multicall error for network: ${network}`, error);
+    } catch (e) {
+      capture(e);
+      console.log(`multicall error for network: ${network}`, e);
     }
   }
 }
