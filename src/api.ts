@@ -1,6 +1,7 @@
 import express from 'express';
 import { getAddress } from '@ethersproject/address';
 import snapshot from '@snapshot-labs/snapshot.js';
+import { capture } from '@snapshot-labs/snapshot-sentry';
 import semver from 'semver';
 import { getSafeVersion } from './utils';
 import db from './mysql';
@@ -57,7 +58,7 @@ router.get('/api/messages/:hash', async (req, res) => {
     const results = await db.queryAsync('SELECT * FROM messages WHERE msg_hash = ?', [hash]);
     return res.json(results);
   } catch (e) {
-    console.log(e);
+    capture(e);
     return res.status(500).json({
       error: 'oops, something went wrong'
     });
@@ -89,6 +90,7 @@ router.post('/', async (req, res) => {
     return res.json({ id: msgHash });
   } catch (e) {
     console.log('[EIP721] Unknown error:', e);
+    capture(e);
     return res.status(500).json({
       error: 'unauthorized',
       error_description: e
