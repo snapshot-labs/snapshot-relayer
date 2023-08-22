@@ -66,6 +66,12 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  if (!req.body.data || !req.body.data.message) {
+    return res.status(400).json({
+      error: 'Invalid format request'
+    });
+  }
+
   try {
     const msg = req.body.data.message;
     const msgHash = snapshot.utils.getHash(req.body.data);
