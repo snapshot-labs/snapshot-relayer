@@ -60,15 +60,8 @@ async function processSig(address, safeHash, network) {
 
 async function checkSignedMessages(messages, network) {
   if (messages.length > 0) {
-<<<<<<< Updated upstream
     const end = timeMessageProcess.startTimer({ network });
-    const provider = snapshot.utils.getProvider(network);
-=======
-    const provider = snapshot.utils.getProvider(
-      network,
-      { broviderUrl: process.env.BROVIDER_URL }
-    );
->>>>>>> Stashed changes
+    const provider = snapshot.utils.getProvider(network, { broviderUrl: process.env.BROVIDER_URL });
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
     try {
       const response = await snapshot.utils.multicall(
