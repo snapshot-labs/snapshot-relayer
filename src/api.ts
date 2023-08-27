@@ -66,14 +66,13 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const msg = req.body.data.message;
-
   if (!req.body.data || !req.body.data.message) {
     return res.status(400).json({
       error: 'Invalid format request'
     });
   }
 
+  const msg = req.body.data.message;
   if (!req.body.data.types.Space && !msg.settings && !msg.space) {
     return res.status(400).json({
       error: 'Missing space'
