@@ -79,9 +79,17 @@ router.post('/', async (req, res) => {
     });
   }
 
+  let address;
+  try {
+    address = getAddress(req.body.address);
+  } catch (e: any) {
+    return res.status(400).json({
+      error: 'Invalid address'
+    });
+  }
+
   try {
     const msgHash = snapshot.utils.getHash(req.body.data);
-    const address = getAddress(req.body.address);
     const env = 'livenet';
     let network = env === 'livenet' ? '1' : '5';
     if (!req.body.data.types.Space && !msg.settings)
