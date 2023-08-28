@@ -41,7 +41,7 @@ async function processSig(address, safeHash, network) {
   const [message] = await db.queryAsync(query, [address, safeHash, network]);
   console.log('Process sig', network, address, safeHash);
   try {
-    const result = await send(message.payload);
+    const result: any = await send(message.payload);
     if (result.error_description && errorMessagesWhitelist.includes(result.error_description)) {
       console.log('[processSig] Error', network, address, safeHash, result);
       return;
