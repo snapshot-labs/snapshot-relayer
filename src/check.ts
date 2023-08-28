@@ -8,7 +8,7 @@ import { capture } from '@snapshot-labs/snapshot-sentry';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
-const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org'
+const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org';
 
 const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '100', '137', '42161'];
 
