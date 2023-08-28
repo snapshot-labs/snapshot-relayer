@@ -8,6 +8,7 @@ import { capture } from '@snapshot-labs/snapshot-sentry';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
+const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org'
 
 const SUPPORTED_NETWORKS = ['1', '5', '10', '56', '100', '137', '42161'];
 
@@ -61,7 +62,7 @@ async function processSig(address, safeHash, network) {
 async function checkSignedMessages(messages, network) {
   if (messages.length > 0) {
     const end = timeMessageProcess.startTimer({ network });
-    const provider = snapshot.utils.getProvider(network, { broviderUrl: process.env.BROVIDER_URL });
+    const provider = snapshot.utils.getProvider(network, { broviderUrl });
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
     try {
       const response = await snapshot.utils.multicall(
