@@ -66,9 +66,17 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  if (!req.body.data || !req.body.data.message) {
+  const msg = req.body.data?.message;
+
+  if (!msg) {
     return res.status(400).json({
       error: 'Invalid format request'
+    });
+  }
+
+  if (!req.body.data.types.Space && !msg.settings && !msg.space) {
+    return res.status(400).json({
+      error: 'Missing space'
     });
   }
 
@@ -82,7 +90,6 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const msg = req.body.data.message;
     const msgHash = snapshot.utils.getHash(req.body.data);
     const env = 'livenet';
     let network = env === 'livenet' ? '1' : '5';
