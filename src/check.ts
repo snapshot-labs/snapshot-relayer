@@ -53,7 +53,7 @@ async function processSig(address, safeHash, network) {
     );
     console.log('[processSig] Sent message for', network, address, safeHash, result);
   } catch (e) {
-    capture(e);
+    capture(e, { address, safeHash, network });
     // @ts-ignore
     console.log('[processSig] Failed', network, address, safeHash, e, e?.message);
   }
@@ -85,7 +85,7 @@ async function checkSignedMessages(messages, network) {
           processSig(messages[index].address, messages[index].hash, network)
       );
     } catch (e) {
-      capture(e);
+      capture(e, { messages, network });
       console.log(`multicall error for network: ${network}`, e);
     } finally {
       end();
