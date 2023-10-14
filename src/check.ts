@@ -1,5 +1,5 @@
 import snapshot from '@snapshot-labs/snapshot.js';
-import fetch from 'node-fetch';
+import { fetchWithKeepAlive } from './utils';
 import db from './mysql';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
@@ -33,7 +33,7 @@ async function send(body, env = 'livenet') {
     },
     body
   };
-  const res = await fetch(url, init);
+  const res = await fetchWithKeepAlive(url, init);
   return res.json();
 }
 
