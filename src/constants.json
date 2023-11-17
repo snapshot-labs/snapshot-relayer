@@ -5,6 +5,6 @@
   },
   "testnet": {
     "ingestor": "https://testnet.seq.snapshot.org",
-    "api": "https://testnet.snapshot.org/graphql"
+    "api": "https://testnet.hub.snapshot.org/graphql"
   }
 }
