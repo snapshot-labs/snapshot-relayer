@@ -71,7 +71,7 @@ async function processSig(address, safeHash, network) {
       address,
       safeHash,
       e,
-      e?.message
+      (e as any)?.message
     );
   }
 }
