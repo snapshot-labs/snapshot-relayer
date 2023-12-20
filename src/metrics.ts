@@ -5,12 +5,7 @@ import db from './mysql';
 export default function initMetrics(app: Express) {
   init(app, {
     normalizedPath: [['^/api/messages/.+', '/api/messages/#hash']],
-    whitelistedPath: [
-      /^\/$/,
-      /^\/api$/,
-      /^\/api\/msg$/,
-      /^\/api\/messages\/.+$/
-    ]
+    whitelistedPath: [/^\/$/, /^\/api$/, /^\/api\/msg$/, /^\/api\/messages\/.+$/]
   });
 }
 

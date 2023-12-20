@@ -38,16 +38,12 @@ async function send(body, env = 'livenet') {
 }
 
 async function processSig(address, safeHash, network) {
-  const query =
-    'SELECT * FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1';
+  const query = 'SELECT * FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1';
   const [message] = await db.queryAsync(query, [address, safeHash, network]);
   console.log('Process sig', network, address, safeHash);
   try {
     const result: any = await send(message.payload);
-    if (
-      result.error_description &&
-      errorMessagesWhitelist.includes(result.error_description)
-    ) {
+    if (result.error_description && errorMessagesWhitelist.includes(result.error_description)) {
       console.log('[processSig] Error', network, address, safeHash, result);
       return;
     }
@@ -55,24 +51,11 @@ async function processSig(address, safeHash, network) {
       'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
       [address, safeHash, network]
     );
-    console.log(
-      '[processSig] Sent message for',
-      network,
-      address,
-      safeHash,
-      result
-    );
+    console.log('[processSig] Sent message for', network, address, safeHash, result);
   } catch (e) {
     capture(e, { address, safeHash, network });
     // @ts-ignore
-    console.log(
-      '[processSig] Failed',
-      network,
-      address,
-      safeHash,
-      e,
-      (e as any)?.message
-    );
+    console.log('[processSig] Failed', network, address, safeHash, e, (e as any)?.message);
   }
 }
 
@@ -86,11 +69,7 @@ async function checkSignedMessages(messages, network) {
         network,
         provider,
         abi,
-        messages.map(message => [
-          message.address,
-          'signedMessages',
-          [message.hash]
-        ]),
+        messages.map(message => [message.address, 'signedMessages', [message.hash]]),
         {
           blockTag: 'latest'
         }
@@ -119,12 +98,8 @@ async function processSigs() {
 
   // Get all messages from last 3 days and filter by supported networks
   const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  let messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', [
-    ts
-  ]);
-  messages = messages.filter(message =>
-    SUPPORTED_NETWORKS.includes(message.network)
-  );
+  let messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', [ts]);
+  messages = messages.filter(message => SUPPORTED_NETWORKS.includes(message.network));
   console.log('Total messages waiting: ', messages.length);
 
   // Divide messages by network

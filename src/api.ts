@@ -7,10 +7,7 @@ import { getSafeVersion } from './utils';
 import db from './mysql';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
-import {
-  name as packageName,
-  version as packageVersion
-} from '../package.json';
+import { name as packageName, version as packageVersion } from '../package.json';
 
 const router = express.Router();
 
@@ -48,9 +45,7 @@ async function calculateSafeMessageHash(safe, message, network = '1') {
 
 router.get('/api', async (req, res) => {
   const commit = process.env.COMMIT_HASH || '';
-  const version = commit
-    ? `${packageVersion}#${commit.substring(0, 7)}`
-    : packageVersion;
+  const version = commit ? `${packageVersion}#${commit.substring(0, 7)}` : packageVersion;
   return res.json({
     name: packageName,
     version
@@ -60,10 +55,7 @@ router.get('/api', async (req, res) => {
 router.get('/api/messages/:hash', async (req, res) => {
   try {
     const { hash } = req.params;
-    const results = await db.queryAsync(
-      'SELECT * FROM messages WHERE msg_hash = ?',
-      [hash]
-    );
+    const results = await db.queryAsync('SELECT * FROM messages WHERE msg_hash = ?', [hash]);
     return res.json(results);
   } catch (e) {
     capture(e);
