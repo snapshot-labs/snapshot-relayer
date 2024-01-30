@@ -29,7 +29,8 @@ const errorMessagesWhitelist = [
   'failed to check proposals limit',
   'failed to check vote validation',
   'failed to check voting power',
-  'update in progress, try later'
+  'update in progress, try later',
+  'unable to fetch current block number'
 ];
 
 async function send(body, env = 'livenet') {
