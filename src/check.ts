@@ -18,7 +18,7 @@ const SUPPORTED_NETWORKS = [
   '137',
   '42161',
   '1088',
-  '1115511'
+  '11155111'
 ];
 
 const errorMessagesWhitelist = [
