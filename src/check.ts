@@ -12,13 +12,13 @@ const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org';
 
 const SUPPORTED_NETWORKS = [
   '1',
-  '5',
   '10',
   '56',
   '100',
   '137',
   '42161',
-  '1088'
+  '1088',
+  '11155111'
 ];
 
 const errorMessagesWhitelist = [
