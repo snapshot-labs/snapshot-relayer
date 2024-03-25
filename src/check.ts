@@ -30,7 +30,7 @@ const errorMessagesWhitelist = [
   'failed to check vote validation',
   'failed to check voting power',
   'update in progress, try later',
-  'unable to fetch current block number'
+  'unable to fetch block'
 ];
 
 async function send(body, env = 'livenet') {
