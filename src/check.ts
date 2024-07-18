@@ -33,7 +33,7 @@ const errorMessagesWhitelist = [
   'unable to fetch block'
 ];
 
-async function send(body, env = 'livenet') {
+async function send(body, env = 'mainnet') {
   const url = process.env.SEQUENCER_URL || constants[env].ingestor;
   const init = {
     method: 'POST',

@@ -14,7 +14,7 @@ import {
 
 const router = express.Router();
 
-async function getSpaceNetwork(space, env = 'livenet') {
+async function getSpaceNetwork(space, env = 'mainnet') {
   const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
   const {
     space: { network }
@@ -99,8 +99,8 @@ router.post('/', async (req, res) => {
 
   try {
     const msgHash = snapshot.utils.getHash(req.body.data);
-    const env = 'livenet';
-    let network = env === 'livenet' ? '1' : '5';
+    const env = 'mainnet';
+    let network = env === 'mainnet' ? '1' : '5';
     if (!req.body.data.types.Space && !msg.settings)
       network = await getSpaceNetwork(msg.space, env);
 

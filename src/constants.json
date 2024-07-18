@@ -1,5 +1,5 @@
 {
-  "livenet": {
+  "mainnet": {
     "ingestor": "https://seq.snapshot.org",
     "api": "https://hub.snapshot.org/graphql"
   },
