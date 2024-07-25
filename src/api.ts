@@ -1,12 +1,12 @@
-import express from 'express';
 import { getAddress } from '@ethersproject/address';
-import snapshot from '@snapshot-labs/snapshot.js';
 import { capture } from '@snapshot-labs/snapshot-sentry';
+import snapshot from '@snapshot-labs/snapshot.js';
+import express from 'express';
 import semver from 'semver';
-import { getSafeVersion } from './utils';
+import constants from './constants.json';
 import db from './mysql';
 // TODO: remove when all environments are updated
-import constants from './constants.json';
+import { getSafeVersion } from './utils';
 import {
   name as packageName,
   version as packageVersion
