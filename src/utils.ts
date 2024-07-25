@@ -1,8 +1,8 @@
 import https from 'node:https';
-import fetch from 'node-fetch';
-import { Contract } from '@ethersproject/contracts';
 import { hexValue } from '@ethersproject/bytes';
+import { Contract } from '@ethersproject/contracts';
 import snapshot from '@snapshot-labs/snapshot.js';
+import fetch from 'node-fetch';
 
 const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org';
 

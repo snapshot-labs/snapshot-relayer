@@ -1,10 +1,10 @@
+import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
-import { fetchWithKeepAlive } from './utils';
-import db from './mysql';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
 import { timeMessageProcess } from './metrics';
-import { capture } from '@snapshot-labs/snapshot-sentry';
+import db from './mysql';
+import { fetchWithKeepAlive } from './utils';
 
 const delay = 60 * 60 * 24 * 3;
 const interval = 15e3;
