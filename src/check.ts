@@ -6,7 +6,7 @@ import { timeMessageProcess } from './metrics';
 import db from './mysql';
 import { fetchWithKeepAlive } from './utils';
 
-const delay = 60 * 60 * 24 * 5; // 5 days
+const delay = 60 * 60 * 24 * 6; // 6 days
 const interval = 15e3;
 const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org';
 
