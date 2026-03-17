@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint src/ --ext .ts,.json",
+    "lint": "eslint src/ test/ --ext .ts,.json",
     "lint:fix": "yarn lint --fix",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
