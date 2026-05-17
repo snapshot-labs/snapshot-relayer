@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
   let address;
   try {
     address = getAddress(req.body.address);
-  } catch (e: any) {
+  } catch {
     return res.status(400).json({
       error: 'Invalid address'
     });
