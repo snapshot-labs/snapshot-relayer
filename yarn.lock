@@ -1117,10 +1117,10 @@
   dependencies:
     "@snapshot-labs/eslint-config-base" "^0.1.0-beta.17"
 
-"@snapshot-labs/prettier-config@^0.1.0-beta.17":
-  version "0.1.0-beta.17"
-  resolved "https://registry.yarnpkg.com/@snapshot-labs/prettier-config/-/prettier-config-0.1.0-beta.17.tgz#ded7d95d31c53be21c2e1d30322e02c3534a6a74"
-  integrity sha512-G2XcHaeLFEvmOtniqbNPNfAFT5g/UIKefRHGqUuSd6sSJp3zHqbpplPdID0IsPaDxu6mJu+UYiLW2ohoB7WauQ==
+"@snapshot-labs/prettier-config@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@snapshot-labs/prettier-config/-/prettier-config-0.1.0.tgz#f0eafa4a3aed6a7fabaf88c016659f3343041071"
+  integrity sha512-8MYAHuewlAdJs55f94qQtEs/WLFmjgYfuIVb1iJPa9gUZauHEXMzbVpKZfnkQsgpwwcXxq9hzg0S/OeOkgj3+w==
 
 "@snapshot-labs/snapshot-metrics@^1.4.1":
   version "1.4.1"
