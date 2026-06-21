@@ -11,7 +11,3 @@ export async function getSafeVersion(safe, network) {
   const contract = new Contract(hexValue(storage), abi, provider);
   return await contract.VERSION([]);
 }
-
-export const fetchWithKeepAlive = (uri: any, options: any = {}) => {
-  return fetch(uri, options);
-};

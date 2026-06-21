@@ -4,7 +4,6 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import constants from './constants.json';
 import { timeMessageProcess } from './metrics';
 import db from './mysql';
-import { fetchWithKeepAlive } from './utils';
 
 const delay = 60 * 60 * 24 * 6; // 6 days
 const interval = 15e3;
@@ -47,7 +46,7 @@ async function send(body, env = 'mainnet') {
     },
     body
   };
-  const res = await fetchWithKeepAlive(url, init);
+  const res = await fetch(url, init);
   return res.json();
 }
 
