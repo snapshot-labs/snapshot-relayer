@@ -65,8 +65,8 @@ router.get('/api/messages/:hash', async (req, res) => {
       [hash]
     );
     return res.json(results);
-  } catch (e) {
-    capture(e);
+  } catch (err) {
+    capture(err);
     return res.status(500).json({
       error: 'oops, something went wrong'
     });
@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
   let address;
   try {
     address = getAddress(req.body.address);
-  } catch (e: any) {
+  } catch {
     return res.status(400).json({
       error: 'Invalid address'
     });
@@ -117,12 +117,12 @@ router.post('/', async (req, res) => {
     await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
     console.log('Received', params);
     return res.json({ id: msgHash });
-  } catch (e) {
-    console.log('[EIP721] Unknown error:', e);
-    capture(e);
+  } catch (err) {
+    console.log('[EIP721] Unknown error:', err);
+    capture(err);
     return res.status(500).json({
       error: 'unauthorized',
-      error_description: e
+      error_description: err
     });
   }
 });
