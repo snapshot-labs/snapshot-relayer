@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import { fallbackLogger, initLogger } from '@snapshot-labs/snapshot-sentry';
+import './instrument';
+import { fallbackLogger } from '@snapshot-labs/snapshot-sentry';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
@@ -10,7 +10,6 @@ import initMetrics from './metrics';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-initLogger(app);
 initMetrics(app);
 
 app.disable('x-powered-by');
