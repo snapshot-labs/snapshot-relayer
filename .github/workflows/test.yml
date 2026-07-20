@@ -4,40 +4,12 @@ on: [push]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-
-    # The app applies its own migrations at startup (runMigrations in
-    # src/db.ts), so CI only provides an empty database.
-    services:
-      postgres:
-        image: postgres:18
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: snapshot_relayer_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Test
-        run: yarn run test
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+    strategy:
+      matrix:
+        target: ['22']
+    uses: snapshot-labs/actions/.github/workflows/test.yml@main
+    secrets: inherit
+    with:
+      target: ${{ matrix.target }}
+      postgres_database_name: snapshot_relayer_test
+      postgres_schema_path: ''
