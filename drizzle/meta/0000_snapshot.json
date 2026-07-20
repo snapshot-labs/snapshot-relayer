@@ -1,5 +1,5 @@
 {
-  "id": "897c9e25-2424-431e-beee-befa61127973",
+  "id": "8d8be1c7-a3cf-4e09-b388-30c36e340c56",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -34,7 +34,7 @@
         },
         "payload": {
           "name": "payload",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },

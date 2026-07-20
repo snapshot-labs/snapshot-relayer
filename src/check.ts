@@ -92,8 +92,8 @@ async function processSig(address, safeHash, network) {
   }
 }
 
-async function checkSignedMessages(messages, network) {
-  if (messages.length > 0) {
+async function checkSignedMessages(pendingMessages, network) {
+  if (pendingMessages.length > 0) {
     const end = timeMessageProcess.startTimer({ network });
     const provider = snapshot.utils.getProvider(network, { broviderUrl });
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
@@ -102,7 +102,7 @@ async function checkSignedMessages(messages, network) {
         network,
         provider,
         abi,
-        messages.map(message => [
+        pendingMessages.map(message => [
           message.address,
           'signedMessages',
           [message.hash]
@@ -119,10 +119,14 @@ async function checkSignedMessages(messages, network) {
       response?.forEach(
         (res, index) =>
           res.toString() === '1' &&
-          processSig(messages[index].address, messages[index].hash, network)
+          processSig(
+            pendingMessages[index].address,
+            pendingMessages[index].hash,
+            network
+          )
       );
     } catch (err) {
-      capture(err, { messages, network });
+      capture(err, { messages: pendingMessages, network });
       console.log(`multicall error for network: ${network}`, err);
     } finally {
       end();
@@ -134,9 +138,10 @@ export async function processSigs() {
   console.log('Process all sigs');
 
   try {
-    // Get all messages from last 3 days and filter by supported networks
+    // Get all messages from last 6 days and filter by supported networks
     const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
     const pending = await db.query.messages.findMany({
+      columns: { address: true, hash: true, network: true },
       where: and(
         gt(messages.ts, ts),
         inArray(messages.network, SUPPORTED_NETWORKS)

@@ -3,7 +3,7 @@ CREATE TABLE "messages" (
 	"hash" varchar(66) NOT NULL,
 	"msg_hash" varchar(66) NOT NULL,
 	"ts" bigint NOT NULL,
-	"payload" jsonb NOT NULL,
+	"payload" text NOT NULL,
 	"network" varchar(24) NOT NULL,
 	"env" varchar(24) NOT NULL,
 	CONSTRAINT "messages_address_hash_pk" PRIMARY KEY("address","hash")

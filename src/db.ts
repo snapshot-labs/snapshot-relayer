@@ -10,7 +10,9 @@ export const db = drizzle({
   connection: {
     connectionString: process.env.DATABASE_URL,
     connectionTimeoutMillis: 60e3,
-    query_timeout: 60e3
+    query_timeout: 60e3,
+    idleTimeoutMillis: 0,
+    keepAlive: true
   },
   schema
 });

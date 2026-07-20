@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import './instrument';
-import { fallbackLogger } from '@snapshot-labs/snapshot-sentry';
+import { capture, fallbackLogger } from '@snapshot-labs/snapshot-sentry';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
@@ -28,4 +28,8 @@ async function start() {
   app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
 }
 
-start();
+start().catch(err => {
+  console.error('Failed to start', err);
+  capture(err);
+  process.exit(1);
+});
