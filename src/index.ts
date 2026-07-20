@@ -5,7 +5,8 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import api from './api';
-import './check';
+import { processSigs } from './check';
+import { runMigrations } from './db';
 import initMetrics from './metrics';
 
 const app = express();
@@ -21,4 +22,10 @@ app.use('/', api);
 
 fallbackLogger(app);
 
-app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
+async function start() {
+  await runMigrations();
+  processSigs();
+  app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
+}
+
+start();

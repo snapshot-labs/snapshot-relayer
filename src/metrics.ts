@@ -1,6 +1,8 @@
 import init, { client } from '@snapshot-labs/snapshot-metrics';
+import { count } from 'drizzle-orm';
 import { Express } from 'express';
-import db from './mysql';
+import { db } from './db';
+import { messages } from './schema';
 
 export default function initMetrics(app: Express) {
   init(app, {
@@ -19,9 +21,10 @@ new client.Gauge({
   help: 'Total number of messages per network',
   labelNames: ['network'],
   async collect() {
-    const results = await db.queryAsync(
-      'SELECT COUNT(*) as count, network FROM messages GROUP BY network'
-    );
+    const results = await db
+      .select({ network: messages.network, count: count() })
+      .from(messages)
+      .groupBy(messages.network);
 
     results.forEach(result => {
       this.set({ network: result.network }, result.count);
