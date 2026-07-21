@@ -1,6 +1,6 @@
 import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
-import { and, eq, gt, inArray } from 'drizzle-orm';
+import { and, eq, gt, inArray, lte } from 'drizzle-orm';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
 import { db } from './db';
@@ -9,6 +9,12 @@ import { messages } from './schema';
 
 const delay = 60 * 60 * 24 * 6; // 6 days
 const interval = 15e3;
+const cleanupInterval = 60 * 60 * 24 * 1e3; // once per day
+let lastCleanup = 0;
+
+export function deadMessageCutoff(now = Date.now()) {
+  return parseInt((now / 1e3).toFixed()) - delay;
+}
 const broviderUrl = process.env.BROVIDER_URL || 'https://rpc.snapshot.org';
 
 const SUPPORTED_NETWORKS = [
@@ -139,7 +145,14 @@ export async function processSigs() {
 
   try {
     // Get all messages from last 6 days and filter by supported networks
-    const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
+    const ts = deadMessageCutoff();
+
+    if (Date.now() - lastCleanup > cleanupInterval) {
+      lastCleanup = Date.now();
+      const purged = await db.delete(messages).where(lte(messages.ts, ts));
+      console.log('[processSigs] Purged dead messages:', purged.rowCount ?? 0);
+    }
+
     const pending = await db.query.messages.findMany({
       columns: { address: true, hash: true, network: true },
       where: and(
