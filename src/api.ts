@@ -1,10 +1,12 @@
 import { getAddress } from '@ethersproject/address';
 import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
+import { eq } from 'drizzle-orm';
 import express from 'express';
 import semver from 'semver';
 import constants from './constants.json';
-import db from './mysql';
+import { db } from './db';
+import { messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
 import {
@@ -60,10 +62,9 @@ router.get('/api', async (req, res) => {
 router.get('/api/messages/:hash', async (req, res) => {
   try {
     const { hash } = req.params;
-    const results = await db.queryAsync(
-      'SELECT * FROM messages WHERE msg_hash = ?',
-      [hash]
-    );
+    const results = await db.query.messages.findMany({
+      where: eq(messages.msg_hash, hash)
+    });
     return res.json(results);
   } catch (err) {
     capture(err);
@@ -114,7 +115,7 @@ router.post('/', async (req, res) => {
       network,
       env
     };
-    await db.queryAsync('INSERT IGNORE INTO messages SET ?', params);
+    await db.insert(messages).values(params).onConflictDoNothing();
     console.log('Received', params);
     return res.json({ id: msgHash });
   } catch (err) {

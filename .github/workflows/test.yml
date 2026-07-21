@@ -11,5 +11,5 @@ jobs:
     secrets: inherit
     with:
       target: ${{ matrix.target }}
-      mysql_database_name: snapshot_relayer_test
-      mysql_schema_path: ./src/schema.sql
+      postgres_database_name: snapshot_relayer_test
+      postgres_schema_path: ''

@@ -1,9 +1,11 @@
 import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
+import { and, eq, gt, inArray } from 'drizzle-orm';
 // TODO: remove when all environments are updated
 import constants from './constants.json';
+import { db } from './db';
 import { timeMessageProcess } from './metrics';
-import db from './mysql';
+import { messages } from './schema';
 
 const delay = 60 * 60 * 24 * 6; // 6 days
 const interval = 15e3;
@@ -51,9 +53,13 @@ async function send(body, env = 'mainnet') {
 }
 
 async function processSig(address, safeHash, network) {
-  const query =
-    'SELECT * FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1';
-  const [message] = await db.queryAsync(query, [address, safeHash, network]);
+  const filter = and(
+    eq(messages.address, address),
+    eq(messages.hash, safeHash),
+    eq(messages.network, network)
+  );
+  const message = await db.query.messages.findFirst({ where: filter });
+  if (!message) return;
   console.log('Process sig', network, address, safeHash);
   try {
     const result: any = await send(message.payload);
@@ -64,10 +70,7 @@ async function processSig(address, safeHash, network) {
       console.log('[processSig] Error', network, address, safeHash, result);
       return;
     }
-    await db.queryAsync(
-      'DELETE FROM messages WHERE address = ? AND hash = ? AND network = ? LIMIT 1',
-      [address, safeHash, network]
-    );
+    await db.delete(messages).where(filter);
     console.log(
       '[processSig] Sent message for',
       network,
@@ -89,8 +92,8 @@ async function processSig(address, safeHash, network) {
   }
 }
 
-async function checkSignedMessages(messages, network) {
-  if (messages.length > 0) {
+async function checkSignedMessages(pendingMessages, network) {
+  if (pendingMessages.length > 0) {
     const end = timeMessageProcess.startTimer({ network });
     const provider = snapshot.utils.getProvider(network, { broviderUrl });
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
@@ -99,7 +102,7 @@ async function checkSignedMessages(messages, network) {
         network,
         provider,
         abi,
-        messages.map(message => [
+        pendingMessages.map(message => [
           message.address,
           'signedMessages',
           [message.hash]
@@ -116,10 +119,14 @@ async function checkSignedMessages(messages, network) {
       response?.forEach(
         (res, index) =>
           res.toString() === '1' &&
-          processSig(messages[index].address, messages[index].hash, network)
+          processSig(
+            pendingMessages[index].address,
+            pendingMessages[index].hash,
+            network
+          )
       );
     } catch (err) {
-      capture(err, { messages, network });
+      capture(err, { messages: pendingMessages, network });
       console.log(`multicall error for network: ${network}`, err);
     } finally {
       end();
@@ -127,40 +134,44 @@ async function checkSignedMessages(messages, network) {
   }
 }
 
-async function processSigs() {
+export async function processSigs() {
   console.log('Process all sigs');
 
-  // Get all messages from last 3 days and filter by supported networks
-  const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
-  let messages = await db.queryAsync('SELECT * FROM messages WHERE ts > ?', [
-    ts
-  ]);
-  messages = messages.filter(message =>
-    SUPPORTED_NETWORKS.includes(message.network)
-  );
-  console.log('Total messages waiting: ', messages.length);
+  try {
+    // Get all messages from last 6 days and filter by supported networks
+    const ts = parseInt((Date.now() / 1e3).toFixed()) - delay;
+    const pending = await db.query.messages.findMany({
+      columns: { address: true, hash: true, network: true },
+      where: and(
+        gt(messages.ts, ts),
+        inArray(messages.network, SUPPORTED_NETWORKS)
+      )
+    });
+    console.log('Total messages waiting: ', pending.length);
 
-  // Divide messages by network
-  const messagesByNetwork = messages.reduce((acc, message) => {
-    if (!acc[message.network]) acc[message.network] = [];
-    acc[message.network].push(message);
-    return acc;
-  }, {});
-  Object.keys(messagesByNetwork).forEach(m =>
-    console.log(`Network: ${m} - Standby: ${messagesByNetwork[m].length};`)
-  );
+    // Divide messages by network
+    const messagesByNetwork = pending.reduce((acc, message) => {
+      if (!acc[message.network]) acc[message.network] = [];
+      acc[message.network].push(message);
+      return acc;
+    }, {});
+    Object.keys(messagesByNetwork).forEach(m =>
+      console.log(`Network: ${m} - Standby: ${messagesByNetwork[m].length};`)
+    );
 
-  // Process messages by network
-  await Promise.all(
-    Object.keys(messagesByNetwork).map(network =>
-      checkSignedMessages(messagesByNetwork[network], network)
-    )
-  );
-  console.log('Done');
+    // Process messages by network
+    await Promise.all(
+      Object.keys(messagesByNetwork).map(network =>
+        checkSignedMessages(messagesByNetwork[network], network)
+      )
+    );
+    console.log('Done');
+  } catch (err) {
+    capture(err);
+    console.log('[processSigs] Failed', err);
+  }
 
   // Wait and process again
   await snapshot.utils.sleep(interval);
   processSigs();
 }
-
-processSigs();
