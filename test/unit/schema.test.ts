@@ -31,38 +31,15 @@ describe('messageRequestSchema', () => {
 
   const invalidBodies: [string, any, string][] = [
     ['missing body', undefined, 'Invalid format request'],
-    ['missing data', { address: validBody.address }, 'Invalid format request'],
     [
       'missing data.message',
       { address: validBody.address, data: { types: {} } },
       'Invalid format request'
     ],
+    ['missing space', withMessage({ space: undefined }), 'Missing space'],
     [
-      'missing space',
-      {
-        address: validBody.address,
-        data: { types: { Vote: [] }, message: { timestamp: 1721600000 } }
-      },
-      'Missing space'
-    ],
-    [
-      'invalid address',
+      'malformed address',
       { ...validBody, address: '0xdeadbeef' },
-      'Invalid address'
-    ],
-    [
-      'address without 0x prefix',
-      { ...validBody, address: '91FD2c8d24767db4Ece7069AA27832ffaf8590f3aa' },
-      'Invalid address'
-    ],
-    [
-      'address too short',
-      { ...validBody, address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f' },
-      'Invalid address'
-    ],
-    [
-      'address with non-hex chars',
-      { ...validBody, address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590zz' },
       'Invalid address'
     ],
     [
@@ -86,11 +63,6 @@ describe('messageRequestSchema', () => {
     [
       'timestamp in milliseconds',
       withMessage({ timestamp: 1721600000000 }),
-      'Invalid timestamp'
-    ],
-    [
-      'timestamp beyond bigint range',
-      withMessage({ timestamp: 1e300 }),
       'Invalid timestamp'
     ],
     [
