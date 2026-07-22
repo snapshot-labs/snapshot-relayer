@@ -6,6 +6,7 @@ import {
   text,
   varchar
 } from 'drizzle-orm/pg-core';
+import { z } from 'zod';
 
 export const messages = pgTable(
   'messages',
@@ -27,3 +28,13 @@ export const messages = pgTable(
     index('messages_msg_hash_idx').on(table.msg_hash)
   ]
 );
+
+// App-level guard for the length caps the DB no longer enforces (refs #369/#370)
+export const insertMessageSchema = z.object({
+  address: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+  hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
+  msg_hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
+  ts: z.number().int().positive(),
+  network: z.string().min(1).max(24),
+  env: z.string().min(1).max(24)
+});

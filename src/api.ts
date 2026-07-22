@@ -6,7 +6,7 @@ import express from 'express';
 import semver from 'semver';
 import constants from './constants.json';
 import { db } from './db';
-import { messages } from './schema';
+import { insertMessageSchema, messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
 import {
@@ -115,6 +115,11 @@ router.post('/', async (req, res) => {
       network,
       env
     };
+    if (!insertMessageSchema.safeParse(params).success) {
+      return res.status(400).json({
+        error: 'Invalid message'
+      });
+    }
     await db.insert(messages).values(params).onConflictDoNothing();
     console.log('Received', params);
     return res.json({ id: msgHash });
