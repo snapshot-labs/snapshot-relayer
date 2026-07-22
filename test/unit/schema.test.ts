@@ -1,4 +1,4 @@
-import { messageRequestSchema } from '../../src/schema';
+import { messageRequestSchema } from '../../src/validation';
 
 const validBody = {
   address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f3',
@@ -34,6 +34,11 @@ describe('messageRequestSchema', () => {
     [
       'missing data.message',
       { address: validBody.address, data: { types: {} } },
+      'Invalid format request'
+    ],
+    [
+      'missing data.types',
+      { address: validBody.address, data: { message: validBody.data.message } },
       'Invalid format request'
     ],
     ['missing space', withMessage({ space: undefined }), 'Missing space'],

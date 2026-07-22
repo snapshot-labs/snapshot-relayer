@@ -5,9 +5,10 @@ import express from 'express';
 import semver from 'semver';
 import constants from './constants.json';
 import { db } from './db';
-import { messageRequestSchema, messages } from './schema';
+import { messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
+import { messageRequestSchema } from './validation';
 import {
   name as packageName,
   version as packageVersion
