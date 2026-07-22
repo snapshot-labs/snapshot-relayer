@@ -5,11 +5,10 @@ export const messages = pgTable(
   {
     address: text().notNull(),
     hash: text().notNull(),
-    // snake_case to preserve the JSON shape served by GET /api/messages/:hash
+    // snake_case: key is served as-is by GET /api/messages/:hash
     msg_hash: text().notNull(),
     ts: bigint({ mode: 'number' }).notNull(),
-    // Opaque JSON string relayed verbatim to the sequencer and
-    // GET /api/messages/:hash; text keeps it byte-for-byte.
+    // text, not json: relayed verbatim, byte-for-byte
     payload: text().notNull(),
     network: text().notNull(),
     env: text().notNull()
