@@ -1,3 +1,4 @@
+import { getAddress } from '@ethersproject/address';
 import {
   bigint,
   index,
@@ -29,12 +30,32 @@ export const messages = pgTable(
   ]
 );
 
-// App-level guard for the length caps the DB no longer enforces (refs #369/#370)
-export const insertMessageSchema = z.object({
-  address: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
-  hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
-  msg_hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
-  ts: z.number().int().positive(),
-  network: z.string().min(1).max(24),
-  env: z.string().min(1).max(24)
-});
+const isChecksummed = (a: unknown) => {
+  try {
+    return getAddress(a as string) === a;
+  } catch {
+    return false;
+  }
+};
+
+export const messageRequestSchema = z
+  .any()
+  .refine(b => b?.data?.message, { message: 'Invalid format request' })
+  .refine(
+    b =>
+      !b?.data?.message ||
+      b.data.types?.Space ||
+      b.data.message.settings ||
+      b.data.message.space,
+    { message: 'Missing space' }
+  )
+  .refine(b => isChecksummed(b?.address), { message: 'Invalid address' })
+  .refine(
+    b => {
+      if (!b?.data?.message) return true;
+      const ts = b.data.message.timestamp;
+      // Upper bound rejects ms-epoch mistakes and bigint-overflow values
+      return Number.isInteger(ts) && ts > 0 && ts <= 10_000_000_000;
+    },
+    { message: 'Invalid timestamp' }
+  );

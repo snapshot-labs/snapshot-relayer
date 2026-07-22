@@ -1,4 +1,3 @@
-import { getAddress } from '@ethersproject/address';
 import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
 import { eq } from 'drizzle-orm';
@@ -6,7 +5,7 @@ import express from 'express';
 import semver from 'semver';
 import constants from './constants.json';
 import { db } from './db';
-import { insertMessageSchema, messages } from './schema';
+import { messageRequestSchema, messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
 import {
@@ -75,28 +74,15 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const msg = req.body.data?.message;
-
-  if (!msg) {
+  const parsed = messageRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
     return res.status(400).json({
-      error: 'Invalid format request'
+      error: parsed.error.issues[0].message
     });
   }
 
-  if (!req.body.data.types.Space && !msg.settings && !msg.space) {
-    return res.status(400).json({
-      error: 'Missing space'
-    });
-  }
-
-  let address;
-  try {
-    address = getAddress(req.body.address);
-  } catch {
-    return res.status(400).json({
-      error: 'Invalid address'
-    });
-  }
+  const msg = req.body.data.message;
+  const address = req.body.address;
 
   try {
     const msgHash = snapshot.utils.getHash(req.body.data);
@@ -115,11 +101,6 @@ router.post('/', async (req, res) => {
       network,
       env
     };
-    if (!insertMessageSchema.safeParse(params).success) {
-      return res.status(400).json({
-        error: 'Invalid message'
-      });
-    }
     await db.insert(messages).values(params).onConflictDoNothing();
     console.log('Received', params);
     return res.json({ id: msgHash });

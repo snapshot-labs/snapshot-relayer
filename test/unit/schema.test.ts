@@ -1,57 +1,115 @@
-import { insertMessageSchema } from '../../src/schema';
+import { messageRequestSchema } from '../../src/schema';
 
-const validParams = {
+const validBody = {
   address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f3',
-  hash: `0x${'ab'.repeat(32)}`,
-  msg_hash: `0x${'cd'.repeat(32)}`,
-  ts: 1721600000,
-  network: '1',
-  env: 'mainnet'
+  data: {
+    types: { Vote: [] },
+    message: { space: 'test.eth', timestamp: 1721600000 }
+  }
 };
 
-describe('insertMessageSchema', () => {
-  it('accepts valid params', () => {
-    expect(insertMessageSchema.safeParse(validParams).success).toBe(true);
+const withMessage = (override: Record<string, any>) => ({
+  ...validBody,
+  data: {
+    ...validBody.data,
+    message: { ...validBody.data.message, ...override }
+  }
+});
+
+describe('messageRequestSchema', () => {
+  it('accepts a valid body', () => {
+    expect(messageRequestSchema.safeParse(validBody).success).toBe(true);
   });
 
-  const invalidInputs: [string, Record<string, any>][] = [
+  it('accepts a body with types.Space and no message.space', () => {
+    const body = {
+      ...validBody,
+      data: { types: { Space: [] }, message: { timestamp: 1721600000 } }
+    };
+    expect(messageRequestSchema.safeParse(body).success).toBe(true);
+  });
+
+  const invalidBodies: [string, any, string][] = [
+    ['missing body', undefined, 'Invalid format request'],
+    ['missing data', { address: validBody.address }, 'Invalid format request'],
+    [
+      'missing data.message',
+      { address: validBody.address, data: { types: {} } },
+      'Invalid format request'
+    ],
+    [
+      'missing space',
+      {
+        address: validBody.address,
+        data: { types: { Vote: [] }, message: { timestamp: 1721600000 } }
+      },
+      'Missing space'
+    ],
+    [
+      'invalid address',
+      { ...validBody, address: '0xdeadbeef' },
+      'Invalid address'
+    ],
     [
       'address without 0x prefix',
-      { address: '91FD2c8d24767db4Ece7069AA27832ffaf8590f3aa' }
+      { ...validBody, address: '91FD2c8d24767db4Ece7069AA27832ffaf8590f3aa' },
+      'Invalid address'
     ],
     [
       'address too short',
-      { address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f' }
-    ],
-    [
-      'address too long',
-      { address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f3a' }
+      { ...validBody, address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f' },
+      'Invalid address'
     ],
     [
       'address with non-hex chars',
-      { address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590zz' }
+      { ...validBody, address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590zz' },
+      'Invalid address'
     ],
-    ['hash too short', { hash: `0x${'ab'.repeat(31)}` }],
-    ['hash too long', { hash: `0x${'ab'.repeat(33)}` }],
-    ['hash with non-hex chars', { hash: `0x${'zz'.repeat(32)}` }],
-    ['msg_hash too short', { msg_hash: `0x${'cd'.repeat(31)}` }],
-    ['msg_hash with non-hex chars', { msg_hash: `0x${'zz'.repeat(32)}` }],
-    ['network longer than 24 chars', { network: 'a'.repeat(25) }],
-    ['empty network', { network: '' }],
-    ['env longer than 24 chars', { env: 'a'.repeat(25) }],
-    ['empty env', { env: '' }],
-    ['negative ts', { ts: -1 }],
-    ['zero ts', { ts: 0 }],
-    ['non-integer ts', { ts: 1721600000.5 }],
-    ['string ts', { ts: '1721600000' }],
-    ['missing ts', { ts: undefined }]
+    [
+      'non-checksummed (lowercase) address',
+      { ...validBody, address: '0x91fd2c8d24767db4ece7069aa27832ffaf8590f3' },
+      'Invalid address'
+    ],
+    [
+      'address with invalid checksum',
+      { ...validBody, address: '0x91fD2c8d24767db4Ece7069AA27832ffaf8590f3' },
+      'Invalid address'
+    ],
+    ['missing address', { data: validBody.data }, 'Invalid address'],
+    ['negative timestamp', withMessage({ timestamp: -1 }), 'Invalid timestamp'],
+    ['zero timestamp', withMessage({ timestamp: 0 }), 'Invalid timestamp'],
+    [
+      'non-integer timestamp',
+      withMessage({ timestamp: 1721600000.5 }),
+      'Invalid timestamp'
+    ],
+    [
+      'timestamp in milliseconds',
+      withMessage({ timestamp: 1721600000000 }),
+      'Invalid timestamp'
+    ],
+    [
+      'timestamp beyond bigint range',
+      withMessage({ timestamp: 1e300 }),
+      'Invalid timestamp'
+    ],
+    [
+      'string timestamp',
+      withMessage({ timestamp: '1721600000' }),
+      'Invalid timestamp'
+    ],
+    [
+      'missing timestamp',
+      withMessage({ timestamp: undefined }),
+      'Invalid timestamp'
+    ]
   ];
 
-  it.each(invalidInputs)('rejects %s', (name, override) => {
-    const result = insertMessageSchema.safeParse({
-      ...validParams,
-      ...override
-    });
+  it.each(invalidBodies)('rejects %s', (name, body, message) => {
+    const result = messageRequestSchema.safeParse(body);
     expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(message);
+    }
   });
 });
