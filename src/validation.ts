@@ -15,24 +15,19 @@ const isChecksummed = (a: string) => {
 // passthrough: parsed.data must stay byte-equivalent to the raw body — it is
 // hashed (getHash) and relayed verbatim to the sequencer
 export const messageRequestSchema = z
-  .object({
+  .looseObject({
     address: z
       .string()
       .refine(isChecksummed, { message: 'Not a checksummed address' }),
-    data: z
-      .object({
-        types: z.record(z.unknown()),
-        message: z
-          .object({
-            timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
-            space: z.string().optional(),
-            settings: z.unknown()
-          })
-          .passthrough()
+    data: z.looseObject({
+      types: z.record(z.string(), z.unknown()),
+      message: z.looseObject({
+        timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
+        space: z.string().optional(),
+        settings: z.unknown().optional()
       })
-      .passthrough()
+    })
   })
-  .passthrough()
   .superRefine((b, ctx) => {
     if (
       !b.data.types.Space &&
@@ -40,7 +35,7 @@ export const messageRequestSchema = z
       !b.data.message.space
     )
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Missing space',
         path: ['data', 'message', 'space']
       });
