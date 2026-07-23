@@ -26,7 +26,7 @@ export const messageRequestSchema = z
           .object({
             timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
             space: z.string().optional(),
-            settings: z.unknown().optional()
+            settings: z.unknown()
           })
           .passthrough()
       })
