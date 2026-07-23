@@ -71,7 +71,18 @@ describe('messageRequestSchema', () => {
     ['non-integer timestamp', withMessage({ timestamp: 1721600000.5 })],
     ['timestamp in milliseconds', withMessage({ timestamp: 1721600000000 })],
     ['string timestamp', withMessage({ timestamp: '1721600000' })],
-    ['missing timestamp', withMessage({ timestamp: undefined })]
+    ['missing timestamp', withMessage({ timestamp: undefined })],
+    [
+      'non-array types value',
+      { ...validBody, data: { ...validBody.data, types: { Vote: 'bad' } } }
+    ],
+    [
+      'types field missing name',
+      {
+        ...validBody,
+        data: { ...validBody.data, types: { Vote: [{ type: 'string' }] } }
+      }
+    ]
   ];
 
   it.each(invalidBodies)('rejects %s', (name, body) => {

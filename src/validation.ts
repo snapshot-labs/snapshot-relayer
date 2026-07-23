@@ -12,15 +12,19 @@ const isChecksummed = (a: string) => {
   }
 };
 
-// looseObject: parsed.data must stay byte-equivalent to the raw body — it is
-// hashed (getHash) and relayed verbatim to the sequencer
+// looseObject: unknown keys must pass through — the body is hashed (getHash)
+// and relayed to the sequencer. Note zod rebuilds objects (key order may
+// change), so the stored payload is serialized from req.body, not parsed.data
 export const messageRequestSchema = z
   .looseObject({
     address: z
       .string()
       .refine(isChecksummed, { message: 'Not a checksummed address' }),
     data: z.looseObject({
-      types: z.record(z.string(), z.unknown()),
+      types: z.record(
+        z.string(),
+        z.array(z.looseObject({ name: z.string(), type: z.string() }))
+      ),
       message: z.looseObject({
         timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
         space: z.string().optional(),

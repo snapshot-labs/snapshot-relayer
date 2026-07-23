@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
       hash,
       msg_hash: msgHash,
       ts: msg.timestamp,
-      payload: JSON.stringify(parsed.data),
+      payload: JSON.stringify(req.body),
       network,
       env
     };
