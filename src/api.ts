@@ -78,18 +78,20 @@ router.post('/', async (req, res) => {
   const parsed = messageRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
-      error: parsed.error.issues[0].message
+      error: 'Invalid format request',
+      details: parsed.error.issues
     });
   }
 
-  const msg = req.body.data.message;
-  const address = req.body.address;
+  const msg = parsed.data.data.message;
+  const address = parsed.data.address;
 
   try {
+    // hash and payload use the raw body verbatim; parsed.data strips unknown keys
     const msgHash = snapshot.utils.getHash(req.body.data);
     const env = 'mainnet';
     let network = env === 'mainnet' ? '1' : '5';
-    if (!req.body.data.types.Space && !msg.settings)
+    if (!parsed.data.data.types.Space && !msg.settings)
       network = await getSpaceNetwork(msg.space, env);
 
     const hash = await calculateSafeMessageHash(address, msgHash, network);
