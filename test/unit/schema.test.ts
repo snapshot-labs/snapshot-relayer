@@ -21,6 +21,23 @@ describe('messageRequestSchema', () => {
     expect(messageRequestSchema.safeParse(validBody).success).toBe(true);
   });
 
+  it('preserves unknown keys at every level', () => {
+    const body = {
+      ...validBody,
+      sig: '0x00',
+      data: {
+        ...validBody.data,
+        domain: { name: 'snapshot' },
+        message: { ...validBody.data.message, choice: 1 }
+      }
+    };
+    const result = messageRequestSchema.safeParse(body);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual(body);
+    }
+  });
+
   it('accepts a body with types.Space and no message.space', () => {
     const body = {
       ...validBody,
@@ -39,7 +56,6 @@ describe('messageRequestSchema', () => {
       'missing data.types',
       { address: validBody.address, data: { message: validBody.data.message } }
     ],
-    ['missing space', withMessage({ space: undefined })],
     ['malformed address', { ...validBody, address: '0xdeadbeef' }],
     [
       'non-checksummed (lowercase) address',

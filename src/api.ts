@@ -87,8 +87,8 @@ router.post('/', async (req, res) => {
   const address = parsed.data.address;
 
   try {
-    // hash and payload use the raw body verbatim; parsed.data strips unknown keys
-    const msgHash = snapshot.utils.getHash(req.body.data);
+    // `as any`: schema doesn't declare domain/primaryType, which getHash's type requires
+    const msgHash = snapshot.utils.getHash(parsed.data.data as any);
     const env = 'mainnet';
     let network = env === 'mainnet' ? '1' : '5';
     if (!parsed.data.data.types.Space && !msg.settings)
@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
       hash,
       msg_hash: msgHash,
       ts: msg.timestamp,
-      payload: JSON.stringify(req.body),
+      payload: JSON.stringify(parsed.data),
       network,
       env
     };

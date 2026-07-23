@@ -12,20 +12,27 @@ const isChecksummed = (a: string) => {
   }
 };
 
+// passthrough: parsed.data must stay byte-equivalent to the raw body — it is
+// hashed (getHash) and relayed verbatim to the sequencer
 export const messageRequestSchema = z
   .object({
     address: z
       .string()
       .refine(isChecksummed, { message: 'Not a checksummed address' }),
-    data: z.object({
-      types: z.record(z.unknown()),
-      message: z.object({
-        timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
-        space: z.string().optional(),
-        settings: z.unknown().optional()
+    data: z
+      .object({
+        types: z.record(z.unknown()),
+        message: z
+          .object({
+            timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
+            space: z.string().optional(),
+            settings: z.unknown().optional()
+          })
+          .passthrough()
       })
-    })
+      .passthrough()
   })
+  .passthrough()
   .superRefine((b, ctx) => {
     if (
       !b.data.types.Space &&
