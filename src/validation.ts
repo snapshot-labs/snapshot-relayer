@@ -12,7 +12,7 @@ const isChecksummed = (a: string) => {
   }
 };
 
-// passthrough: parsed.data must stay byte-equivalent to the raw body — it is
+// looseObject: parsed.data must stay byte-equivalent to the raw body — it is
 // hashed (getHash) and relayed verbatim to the sequencer
 export const messageRequestSchema = z
   .looseObject({
