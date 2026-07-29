@@ -13,8 +13,8 @@ const isChecksummed = (a: string) => {
 };
 
 // looseObject: unknown keys must pass through — the body is hashed (getHash)
-// and relayed to the sequencer. Note zod rebuilds objects (key order may
-// change), so the stored payload is serialized from req.body, not parsed.data
+// and relayed to the sequencer. zod rebuilds objects, so both the hash and
+// the stored payload read req.body directly; parsed.data is a gate only
 export const messageRequestSchema = z
   .looseObject({
     address: z
