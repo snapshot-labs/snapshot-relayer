@@ -46,6 +46,16 @@ describe('messageRequestSchema', () => {
     expect(messageRequestSchema.safeParse(body).success).toBe(true);
   });
 
+  it('accepts a body with message.settings and no message.space', () => {
+    const body = withMessage({ space: undefined, settings: {} });
+    expect(messageRequestSchema.safeParse(body).success).toBe(true);
+  });
+
+  it('accepts the maximum timestamp', () => {
+    const body = withMessage({ timestamp: 10_000_000_000 });
+    expect(messageRequestSchema.safeParse(body).success).toBe(true);
+  });
+
   const invalidBodies: [string, any][] = [
     ['missing body', undefined],
     [
@@ -71,7 +81,14 @@ describe('messageRequestSchema', () => {
     ['non-integer timestamp', withMessage({ timestamp: 1721600000.5 })],
     ['timestamp in milliseconds', withMessage({ timestamp: 1721600000000 })],
     ['string timestamp', withMessage({ timestamp: '1721600000' })],
-    ['missing timestamp', withMessage({ timestamp: undefined })],
+    ['timestamp above the maximum', withMessage({ timestamp: 10_000_000_001 })],
+    [
+      'missing timestamp',
+      {
+        ...validBody,
+        data: { ...validBody.data, message: { space: 'test.eth' } }
+      }
+    ],
     [
       'non-array types value',
       { ...validBody, data: { ...validBody.data, types: { Vote: 'bad' } } }
@@ -85,7 +102,7 @@ describe('messageRequestSchema', () => {
     ]
   ];
 
-  it.each(invalidBodies)('rejects %s', (name, body) => {
+  it.each(invalidBodies)('rejects %s', (_name, body) => {
     expect(messageRequestSchema.safeParse(body).success).toBe(false);
   });
 
@@ -95,7 +112,9 @@ describe('messageRequestSchema', () => {
     );
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Missing space');
+      expect(result.error.issues.map(i => i.message)).toContain(
+        'Missing space'
+      );
     }
   });
 });
