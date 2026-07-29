@@ -21,8 +21,8 @@ const badRequest = (res, details: { path?: string; message: string }[] = []) =>
 
 async function getSpaceNetwork(space, env = 'mainnet') {
   const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
-  // the hub returns { space: null } for an unknown id — destructuring
-  // network from it directly would throw and surface as an opaque 500
+  // the hub returns { space: null } for an unknown id, so this resolves to
+  // undefined — callers must treat that as "space not found"
   const { space: spaceData } = await snapshot.utils.subgraphRequest(
     snapshotHubUrl,
     {

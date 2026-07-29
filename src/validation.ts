@@ -20,8 +20,8 @@ export const needsSpaceLookup = (
 ) => !types.Space && !settings;
 
 // looseObject: unknown keys must pass through — the body is hashed (getHash)
-// and relayed to the sequencer. zod rebuilds objects, so both the hash and
-// the stored payload read req.body directly; parsed.data is a gate only
+// and relayed to the sequencer verbatim. zod rebuilds objects, so the hash and
+// the stored payload are taken from req.body, never from parsed.data
 export const messageRequestSchema = z
   .looseObject({
     address: z
