@@ -13,25 +13,23 @@ const isChecksummed = (a: string) => {
   }
 };
 
-// api.ts branches on the same condition to decide whether to resolve the space
-// on the hub, and relies on this schema having required `space` in that arm
+/** Whether `space` must be resolved on the hub. The schema below requires
+ *  `space` in exactly this arm, and api.ts branches on the same condition. */
 export const needsSpaceLookup = (
   types: Record<string, unknown>,
   settings: unknown
 ) => !types.Space && !settings;
 
-// looseObject: unknown keys must pass through — the body is hashed (getHash)
-// and relayed to the sequencer verbatim. zod rebuilds objects, so the hash and
-// the stored payload are taken from req.body, never from parsed.data
+/** Validation gate for POST /. looseObject so unknown keys survive, but zod
+ *  still rebuilds objects — hash and store req.body, never parsed.data. */
 export const messageRequestSchema = z
   .looseObject({
     address: z
       .string()
       .refine(isChecksummed, { message: 'Not a checksummed address' }),
     data: z.looseObject({
-      // entries are left unvalidated: getHash rejects every malformed shape a
-      // stricter schema would, and walking them here deep-copies a 4mb
-      // caller-controlled map and overflows zod's stack at ~100k bad entries
+      // entries are getHash's job: it rejects the same malformed shapes without
+      // deep-walking a 4mb map (~100k bad entries overflowed zod's stack)
       types: z.record(z.string(), z.unknown()),
       message: z.looseObject({
         timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
@@ -52,15 +50,17 @@ export const messageRequestSchema = z
       });
   });
 
-// safeParse is contractually total, but zod has already broken that contract
-// here once (an unbounded issue array overflowed the stack), and express 4
-// doesn't catch async throws — with no unhandledRejection handler installed,
-// one throw takes the process down. null means "unparseable", not "invalid".
+/**
+ * safeParse, guarded: zod has broken its no-throw contract here before, and a
+ * throw in an express 4 async handler is an unhandled rejection that kills the
+ * process.
+ * @returns the parse result; a throw becomes a failure with no issues.
+ */
 export function parseMessageRequest(body: unknown) {
   try {
     return messageRequestSchema.safeParse(body);
   } catch (err) {
     capture(err);
-    return null;
+    return { success: false, error: new z.ZodError([]) } as const;
   }
 }

@@ -122,21 +122,24 @@ jest.mock('@snapshot-labs/snapshot-sentry', () => ({ capture: jest.fn() }));
 
 describe('parseMessageRequest', () => {
   it('returns the parse result for a valid body', () => {
-    expect(parseMessageRequest(validBody)?.success).toBe(true);
+    expect(parseMessageRequest(validBody).success).toBe(true);
   });
 
   it('returns the parse result for an invalid body', () => {
-    expect(parseMessageRequest({})?.success).toBe(false);
+    expect(parseMessageRequest({}).success).toBe(false);
   });
 
-  it('returns null instead of throwing when safeParse throws', () => {
+  it('reports a failure with no issues instead of throwing', () => {
     const spy = jest
       .spyOn(messageRequestSchema, 'safeParse')
       .mockImplementation(() => {
         throw new RangeError('Maximum call stack size exceeded');
       });
-    expect(() => parseMessageRequest(validBody)).not.toThrow();
-    expect(parseMessageRequest(validBody)).toBeNull();
+
+    const result = parseMessageRequest(validBody);
+
+    expect(result.success).toBe(false);
+    expect(result.success === false && result.error.issues).toEqual([]);
     expect(capture).toHaveBeenCalled();
     spy.mockRestore();
   });

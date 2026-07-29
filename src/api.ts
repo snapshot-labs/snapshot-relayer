@@ -19,10 +19,9 @@ const router = express.Router();
 const badRequest = (res, details: { path?: string; message: string }[] = []) =>
   res.status(400).json({ error: 'Invalid format request', details });
 
+/** @returns the space's network, or undefined if the hub doesn't know the id. */
 async function getSpaceNetwork(space, env = 'mainnet') {
   const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
-  // the hub returns { space: null } for an unknown id, so this resolves to
-  // undefined — callers must treat that as "space not found"
   const { space: spaceData } = await snapshot.utils.subgraphRequest(
     snapshotHubUrl,
     {
@@ -82,11 +81,9 @@ router.get('/api/messages/:hash', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const parsed = parseMessageRequest(req.body);
-  if (!parsed) return badRequest(res);
   if (!parsed.success)
     return badRequest(
       res,
-      // projected so zod's internal issue shape isn't the public contract
       parsed.error.issues.map(({ path, message }) => ({
         path: path.join('.'),
         message
@@ -98,12 +95,11 @@ router.post('/', async (req, res) => {
 
   let msgHash: string;
   try {
-    // hash the raw body, not parsed.data: the stored/relayed payload is
-    // serialized from req.body, and hash/payload must never diverge
+    // req.body, not parsed.data — the hash must match the payload stored below
     msgHash = snapshot.utils.getHash(req.body.data);
   } catch (err) {
-    // `reason` names the offending type (caller-sized, so truncate); `message`
-    // and `value` embed the whole `types` payload — never return those
+    // `reason` names the offending type, so it is caller-sized; `message` and
+    // `value` embed the whole `types` payload — never return those
     const reason = (err as any)?.reason;
     return badRequest(res, [
       {
