@@ -118,11 +118,20 @@ router.post('/', async (req, res) => {
   } catch (err) {
     // getHash does no I/O; any throw here is ethers rejecting the EIP-712 shape
     // (missing primary type, unparseable field type, undefined struct ref, ...).
-    // Use `reason` (ethers' short fixed-form message), never `message`/`value` —
-    // those echo the whole (possibly huge) `types` payload back into the response.
+    // `reason` quotes the offending type name, so it is caller-sized and must
+    // be truncated; `message`/`value` embed the whole `types` payload — never
+    // return those.
+    const reason = (err as any)?.reason;
     return res.status(400).json({
       error: 'Invalid format request',
-      details: [{ message: (err as any)?.reason ?? 'Invalid EIP-712 data' }]
+      details: [
+        {
+          message:
+            typeof reason === 'string'
+              ? reason.slice(0, 200)
+              : 'Invalid EIP-712 data'
+        }
+      ]
     });
   }
 
