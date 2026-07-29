@@ -8,7 +8,7 @@ import { db } from './db';
 import { messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
-import { messageRequestSchema } from './validation';
+import { messageRequestSchema, needsSpaceLookup } from './validation';
 import {
   name as packageName,
   version as packageVersion
@@ -16,7 +16,8 @@ import {
 
 const router = express.Router();
 
-class SpaceNotFoundError extends Error {}
+const badRequest = (res, details: { path?: string; message: string }[] = []) =>
+  res.status(400).json({ error: 'Invalid format request', details });
 
 async function getSpaceNetwork(space, env = 'mainnet') {
   const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
@@ -31,8 +32,7 @@ async function getSpaceNetwork(space, env = 'mainnet') {
       }
     }
   );
-  if (!spaceData) throw new SpaceNotFoundError('Unknown space');
-  return spaceData.network;
+  return spaceData?.network;
 }
 
 async function calculateSafeMessageHash(safe, message, network = '1') {
@@ -81,34 +81,19 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  let parsed;
-  try {
-    parsed = messageRequestSchema.safeParse(req.body);
-  } catch (err) {
-    // safeParse can throw instead of returning: zod spreads a record key's
-    // whole issue array into push(), which overflows the stack on a body with
-    // ~100k invalid entries — outside a try that escapes as an unhandled
-    // rejection, hanging the request or killing the process
-    capture(err);
-    return res.status(400).json({
-      error: 'Invalid format request'
-    });
-  }
-  if (!parsed.success) {
-    return res.status(400).json({
-      error: 'Invalid format request',
-      // capped: issue count is caller-controlled (one per bad `types` entry),
-      // so an unbounded array turns a 200KB body into a ~14MB response.
+  const parsed = messageRequestSchema.safeParse(req.body);
+  if (!parsed.success)
+    return badRequest(
+      res,
       // projected so zod's internal issue shape isn't the public contract
-      details: parsed.error.issues.slice(0, 20).map(({ path, message }) => ({
+      parsed.error.issues.map(({ path, message }) => ({
         path: path.join('.'),
         message
       }))
-    });
-  }
+    );
 
-  const msg = parsed.data.data.message;
-  const address = parsed.data.address;
+  const { address, data } = parsed.data;
+  const msg = data.message;
 
   let msgHash: string;
   try {
@@ -116,30 +101,26 @@ router.post('/', async (req, res) => {
     // serialized from req.body, and hash/payload must never diverge
     msgHash = snapshot.utils.getHash(req.body.data);
   } catch (err) {
-    // getHash does no I/O; any throw here is ethers rejecting the EIP-712 shape
-    // (missing primary type, unparseable field type, undefined struct ref, ...).
-    // `reason` quotes the offending type name, so it is caller-sized and must
-    // be truncated; `message`/`value` embed the whole `types` payload — never
-    // return those.
+    // `reason` names the offending type (caller-sized, so truncate); `message`
+    // and `value` embed the whole `types` payload — never return those
     const reason = (err as any)?.reason;
-    return res.status(400).json({
-      error: 'Invalid format request',
-      details: [
-        {
-          message:
-            typeof reason === 'string'
-              ? reason.slice(0, 200)
-              : 'Invalid EIP-712 data'
-        }
-      ]
-    });
+    return badRequest(res, [
+      {
+        message:
+          typeof reason === 'string'
+            ? reason.slice(0, 200)
+            : 'Invalid EIP-712 data'
+      }
+    ]);
   }
 
   try {
     const env = 'mainnet';
     let network = env === 'mainnet' ? '1' : '5';
-    if (!parsed.data.data.types.Space && !msg.settings)
+    if (needsSpaceLookup(data.types, msg.settings)) {
       network = await getSpaceNetwork(msg.space, env);
+      if (!network) return badRequest(res, [{ message: 'Unknown space' }]);
+    }
 
     const hash = await calculateSafeMessageHash(address, msgHash, network);
     const params = {
@@ -155,12 +136,6 @@ router.post('/', async (req, res) => {
     console.log('Received', params);
     return res.json({ id: msgHash });
   } catch (err) {
-    if (err instanceof SpaceNotFoundError) {
-      return res.status(400).json({
-        error: 'Invalid format request',
-        details: [{ message: err.message }]
-      });
-    }
     console.log('[EIP721] Unknown error:', err);
     capture(err);
     return res.status(500).json({

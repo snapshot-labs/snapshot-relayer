@@ -17,8 +17,36 @@ const withMessage = (override: Record<string, any>) => ({
 });
 
 describe('messageRequestSchema', () => {
-  it('accepts a valid body', () => {
-    expect(messageRequestSchema.safeParse(validBody).success).toBe(true);
+  const validBodies: [string, any][] = [
+    ['a valid body', validBody],
+    [
+      'a body with types.Space and no message.space',
+      {
+        ...validBody,
+        data: { types: { Space: [] }, message: { timestamp: 1721600000 } }
+      }
+    ],
+    [
+      'a body with message.settings and no message.space',
+      withMessage({ space: undefined, settings: {} })
+    ],
+    ['the maximum timestamp', withMessage({ timestamp: 10_000_000_000 })],
+    // types entries are getHash's job, not the schema's
+    [
+      'a non-array types value',
+      { ...validBody, data: { ...validBody.data, types: { Vote: 'bad' } } }
+    ],
+    [
+      'a types field missing name',
+      {
+        ...validBody,
+        data: { ...validBody.data, types: { Vote: [{ type: 'string' }] } }
+      }
+    ]
+  ];
+
+  it.each(validBodies)('accepts %s', (_name, body) => {
+    expect(messageRequestSchema.safeParse(body).success).toBe(true);
   });
 
   it('preserves unknown keys at every level', () => {
@@ -31,29 +59,7 @@ describe('messageRequestSchema', () => {
         message: { ...validBody.data.message, choice: 1 }
       }
     };
-    const result = messageRequestSchema.safeParse(body);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual(body);
-    }
-  });
-
-  it('accepts a body with types.Space and no message.space', () => {
-    const body = {
-      ...validBody,
-      data: { types: { Space: [] }, message: { timestamp: 1721600000 } }
-    };
-    expect(messageRequestSchema.safeParse(body).success).toBe(true);
-  });
-
-  it('accepts a body with message.settings and no message.space', () => {
-    const body = withMessage({ space: undefined, settings: {} });
-    expect(messageRequestSchema.safeParse(body).success).toBe(true);
-  });
-
-  it('accepts the maximum timestamp', () => {
-    const body = withMessage({ timestamp: 10_000_000_000 });
-    expect(messageRequestSchema.safeParse(body).success).toBe(true);
+    expect(messageRequestSchema.safeParse(body).data).toEqual(body);
   });
 
   const invalidBodies: [string, any][] = [
@@ -90,16 +96,10 @@ describe('messageRequestSchema', () => {
       }
     ],
     [
-      'non-array types value',
-      { ...validBody, data: { ...validBody.data, types: { Vote: 'bad' } } }
+      'non-object types',
+      { ...validBody, data: { ...validBody.data, types: 'nope' } }
     ],
-    [
-      'types field missing name',
-      {
-        ...validBody,
-        data: { ...validBody.data, types: { Vote: [{ type: 'string' }] } }
-      }
-    ]
+    ['array types', { ...validBody, data: { ...validBody.data, types: [] } }]
   ];
 
   it.each(invalidBodies)('rejects %s', (_name, body) => {
@@ -110,11 +110,6 @@ describe('messageRequestSchema', () => {
     const result = messageRequestSchema.safeParse(
       withMessage({ space: undefined })
     );
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues.map(i => i.message)).toContain(
-        'Missing space'
-      );
-    }
+    expect(result.error?.issues.map(i => i.message)).toContain('Missing space');
   });
 });

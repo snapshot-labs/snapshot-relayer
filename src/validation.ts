@@ -12,6 +12,13 @@ const isChecksummed = (a: string) => {
   }
 };
 
+// api.ts branches on the same condition to decide whether to resolve the space
+// on the hub, and relies on this schema having required `space` in that arm
+export const needsSpaceLookup = (
+  types: Record<string, unknown>,
+  settings: unknown
+) => !types.Space && !settings;
+
 // looseObject: unknown keys must pass through — the body is hashed (getHash)
 // and relayed to the sequencer. zod rebuilds objects, so both the hash and
 // the stored payload read req.body directly; parsed.data is a gate only
@@ -21,10 +28,10 @@ export const messageRequestSchema = z
       .string()
       .refine(isChecksummed, { message: 'Not a checksummed address' }),
     data: z.looseObject({
-      types: z.record(
-        z.string(),
-        z.array(z.looseObject({ name: z.string(), type: z.string() }))
-      ),
+      // entries are left unvalidated: getHash rejects every malformed shape a
+      // stricter schema would, and walking them here deep-copies a 4mb
+      // caller-controlled map and overflows zod's stack at ~100k bad entries
+      types: z.record(z.string(), z.unknown()),
       message: z.looseObject({
         timestamp: z.number().int().positive().max(MAX_TIMESTAMP),
         space: z.string().optional(),
@@ -34,8 +41,7 @@ export const messageRequestSchema = z
   })
   .superRefine((b, ctx) => {
     if (
-      !b.data.types.Space &&
-      !b.data.message.settings &&
+      needsSpaceLookup(b.data.types, b.data.message.settings) &&
       !b.data.message.space
     )
       ctx.addIssue({
