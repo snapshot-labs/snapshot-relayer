@@ -1,4 +1,8 @@
-import { messageRequestSchema } from '../../src/validation';
+import { capture } from '@snapshot-labs/snapshot-sentry';
+import {
+  messageRequestSchema,
+  parseMessageRequest
+} from '../../src/validation';
 
 const validBody = {
   address: '0x91FD2c8d24767db4Ece7069AA27832ffaf8590f3',
@@ -111,5 +115,29 @@ describe('messageRequestSchema', () => {
       withMessage({ space: undefined })
     );
     expect(result.error?.issues.map(i => i.message)).toContain('Missing space');
+  });
+});
+
+jest.mock('@snapshot-labs/snapshot-sentry', () => ({ capture: jest.fn() }));
+
+describe('parseMessageRequest', () => {
+  it('returns the parse result for a valid body', () => {
+    expect(parseMessageRequest(validBody)?.success).toBe(true);
+  });
+
+  it('returns the parse result for an invalid body', () => {
+    expect(parseMessageRequest({})?.success).toBe(false);
+  });
+
+  it('returns null instead of throwing when safeParse throws', () => {
+    const spy = jest
+      .spyOn(messageRequestSchema, 'safeParse')
+      .mockImplementation(() => {
+        throw new RangeError('Maximum call stack size exceeded');
+      });
+    expect(() => parseMessageRequest(validBody)).not.toThrow();
+    expect(parseMessageRequest(validBody)).toBeNull();
+    expect(capture).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

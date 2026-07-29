@@ -1,4 +1,5 @@
 import { getAddress } from '@ethersproject/address';
+import { capture } from '@snapshot-labs/snapshot-sentry';
 import { z } from 'zod';
 
 // ~year 2286; rejects ms-epoch mistakes and bigint-overflow values
@@ -50,3 +51,16 @@ export const messageRequestSchema = z
         path: ['data', 'message', 'space']
       });
   });
+
+// safeParse is contractually total, but zod has already broken that contract
+// here once (an unbounded issue array overflowed the stack), and express 4
+// doesn't catch async throws — with no unhandledRejection handler installed,
+// one throw takes the process down. null means "unparseable", not "invalid".
+export function parseMessageRequest(body: unknown) {
+  try {
+    return messageRequestSchema.safeParse(body);
+  } catch (err) {
+    capture(err);
+    return null;
+  }
+}

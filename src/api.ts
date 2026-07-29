@@ -8,7 +8,7 @@ import { db } from './db';
 import { messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
-import { messageRequestSchema, needsSpaceLookup } from './validation';
+import { needsSpaceLookup, parseMessageRequest } from './validation';
 import {
   name as packageName,
   version as packageVersion
@@ -81,7 +81,8 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const parsed = messageRequestSchema.safeParse(req.body);
+  const parsed = parseMessageRequest(req.body);
+  if (!parsed) return badRequest(res);
   if (!parsed.success)
     return badRequest(
       res,
