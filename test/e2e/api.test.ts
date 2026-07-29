@@ -16,6 +16,10 @@ describe('POST /', () => {
         const response = await request(HOST).post('/').send(input);
 
         expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({
+          error: 'Invalid format request',
+          details: expect.any(Array)
+        });
       }
     );
   });

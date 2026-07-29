@@ -1,4 +1,3 @@
-import { getAddress } from '@ethersproject/address';
 import { capture } from '@snapshot-labs/snapshot-sentry';
 import snapshot from '@snapshot-labs/snapshot.js';
 import { eq } from 'drizzle-orm';
@@ -9,6 +8,7 @@ import { db } from './db';
 import { messages } from './schema';
 // TODO: remove when all environments are updated
 import { getSafeVersion } from './utils';
+import { needsSpaceLookup, parseMessageRequest } from './validation';
 import {
   name as packageName,
   version as packageVersion
@@ -16,17 +16,22 @@ import {
 
 const router = express.Router();
 
+const badRequest = (res, details: { path?: string; message: string }[] = []) =>
+  res.status(400).json({ error: 'Invalid format request', details });
+
+/** @returns the space's network, or undefined if the hub doesn't know the id. */
 async function getSpaceNetwork(space, env = 'mainnet') {
   const snapshotHubUrl = process.env.HUB_URL || constants[env].api;
-  const {
-    space: { network }
-  } = await snapshot.utils.subgraphRequest(snapshotHubUrl, {
-    space: {
-      __args: { id: space },
-      network: true
+  const { space: spaceData } = await snapshot.utils.subgraphRequest(
+    snapshotHubUrl,
+    {
+      space: {
+        __args: { id: space },
+        network: true
+      }
     }
-  });
-  return network;
+  );
+  return spaceData?.network;
 }
 
 async function calculateSafeMessageHash(safe, message, network = '1') {
@@ -75,35 +80,44 @@ router.get('/api/messages/:hash', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const msg = req.body.data?.message;
+  const parsed = parseMessageRequest(req.body);
+  if (!parsed.success)
+    return badRequest(
+      res,
+      parsed.error.issues.map(({ path, message }) => ({
+        path: path.join('.'),
+        message
+      }))
+    );
 
-  if (!msg) {
-    return res.status(400).json({
-      error: 'Invalid format request'
-    });
-  }
+  const { address, data } = parsed.data;
+  const msg = data.message;
 
-  if (!req.body.data.types.Space && !msg.settings && !msg.space) {
-    return res.status(400).json({
-      error: 'Missing space'
-    });
-  }
-
-  let address;
+  let msgHash: string;
   try {
-    address = getAddress(req.body.address);
-  } catch {
-    return res.status(400).json({
-      error: 'Invalid address'
-    });
+    // req.body, not parsed.data — the hash must match the payload stored below
+    msgHash = snapshot.utils.getHash(req.body.data);
+  } catch (err) {
+    // `reason` names the offending type, so it is caller-sized; `message` and
+    // `value` embed the whole `types` payload — never return those
+    const reason = (err as any)?.reason;
+    return badRequest(res, [
+      {
+        message:
+          typeof reason === 'string'
+            ? reason.slice(0, 200)
+            : 'Invalid EIP-712 data'
+      }
+    ]);
   }
 
   try {
-    const msgHash = snapshot.utils.getHash(req.body.data);
     const env = 'mainnet';
     let network = env === 'mainnet' ? '1' : '5';
-    if (!req.body.data.types.Space && !msg.settings)
+    if (needsSpaceLookup(data.types, msg.settings)) {
       network = await getSpaceNetwork(msg.space, env);
+      if (!network) return badRequest(res, [{ message: 'Unknown space' }]);
+    }
 
     const hash = await calculateSafeMessageHash(address, msgHash, network);
     const params = {
