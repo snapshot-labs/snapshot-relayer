@@ -58,10 +58,10 @@ async function processSig(address, safeHash, network) {
     eq(messages.hash, safeHash),
     eq(messages.network, network)
   );
-  const message = await db.query.messages.findFirst({ where: filter });
-  if (!message) return;
-  console.log('Process sig', network, address, safeHash);
   try {
+    const message = await db.query.messages.findFirst({ where: filter });
+    if (!message) return;
+    console.log('Process sig', network, address, safeHash);
     const result: any = await send(message.payload);
     if (
       result.error_description &&
@@ -92,7 +92,7 @@ async function processSig(address, safeHash, network) {
   }
 }
 
-async function checkSignedMessages(pendingMessages, network) {
+export async function checkSignedMessages(pendingMessages, network) {
   if (pendingMessages.length > 0) {
     const end = timeMessageProcess.startTimer({ network });
     const provider = snapshot.utils.getProvider(network, { broviderUrl });
