@@ -12,7 +12,8 @@ export default function initMetrics(app: Express) {
       /^\/api$/,
       /^\/api\/msg$/,
       /^\/api\/messages\/.+$/
-    ]
+    ],
+    db: db.$client
   });
 }
 
