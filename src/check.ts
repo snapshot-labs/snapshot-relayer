@@ -95,7 +95,10 @@ async function processSig(address, safeHash, network) {
 export async function checkSignedMessages(pendingMessages, network) {
   if (pendingMessages.length > 0) {
     const end = timeMessageProcess.startTimer({ network });
-    const provider = snapshot.utils.getProvider(network, { broviderUrl });
+    const provider = snapshot.utils.getProvider(network, {
+      broviderUrl,
+      clientName: 'snapshot-relayer'
+    });
     const abi = ['function signedMessages(bytes32) view returns (uint256)'];
     try {
       const response = await snapshot.utils.multicall(
