@@ -1,4 +1,3 @@
-import { hexValue } from '@ethersproject/bytes';
 import { Contract } from '@ethersproject/contracts';
 import snapshot from '@snapshot-labs/snapshot.js';
 
@@ -9,8 +8,8 @@ export async function getSafeVersion(safe, network) {
     broviderUrl,
     clientName: 'snapshot-relayer'
   });
-  const storage = await provider.getStorageAt(safe, 0);
   const abi = ['function VERSION() view returns (string)'];
-  const contract = new Contract(hexValue(storage), abi, provider);
-  return await contract.VERSION([]);
+  const contract = new Contract(safe, abi, provider);
+
+  return await contract.VERSION();
 }
