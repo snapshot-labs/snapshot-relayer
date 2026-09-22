@@ -133,6 +133,13 @@ router.post('/', async (req, res) => {
     console.log('Received', params);
     return res.json({ id: msgHash });
   } catch (err) {
+    const inner = (err as any)?.error;
+    const notASafe = !inner || inner.error?.code === 3;
+    if ((err as any)?.code === 'CALL_EXCEPTION' && notASafe)
+      return badRequest(res, [
+        { path: 'address', message: 'Not a Safe account' }
+      ]);
+
     console.log('[EIP721] Unknown error:', err);
     capture(err);
     return res.status(500).json({
