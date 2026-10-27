@@ -1741,10 +1741,10 @@
   dependencies:
     "@sentry/node" "^10.52.0"
 
-"@snapshot-labs/snapshot.js@^0.17.4":
-  version "0.17.4"
-  resolved "https://registry.yarnpkg.com/@snapshot-labs/snapshot.js/-/snapshot.js-0.17.4.tgz#e7b21bab54bfc5314a3df3f4b9f434ccde82e999"
-  integrity sha512-NqQMfYFCbDTijPAeP/EQq2MWtzHL0L9PzM5t0fyetYJh4hQ+jPb5tvz9DkxCwmKqctrRUMuHJ7EhQMt2IUPzIg==
+"@snapshot-labs/snapshot.js@^0.17.7":
+  version "0.17.7"
+  resolved "https://registry.yarnpkg.com/@snapshot-labs/snapshot.js/-/snapshot.js-0.17.7.tgz#eaaea0d824e9745a7ac5f62f94876ade397ec464"
+  integrity sha512-l/HY5I5gcqa5KNckK1GlWF2tp8JEsnXtk3G9kH3OLRoU457PfnFr/r1SQgwPo09UR6Tekphb76z4/cNb9y4Bug==
   dependencies:
     "@ethersproject/abi" "^5.6.4"
     "@ethersproject/address" "^5.6.1"
